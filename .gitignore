@@ -1,0 +1,4 @@
+src/config.json
+src/node_modules
+src/util/guildpoints/*.json
+src/old_commands/*
