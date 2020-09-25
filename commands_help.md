@@ -24,8 +24,6 @@
   - Single user: `!members-update @Chris AN`
   - Multiple users: `!members-update @Chris AN, @Jack TN, @Mindy HS, @Pete HT`
 
-### ------ Points ------
-
 ## `points give`
 
 - Description: Give `<amount>` points to the user supplied, each user has its own `<amount>`

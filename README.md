@@ -1,6 +1,7 @@
 # veym-bot
 
 Discord bot built from scratch using discord.js and the official [tutorial](https://discordjs.guide/)
+Command documentation can be found [here](https://github.com/michaeltranxd/veym-discord-bot/blob/master/commands_help.md)
 
 # Features
 
