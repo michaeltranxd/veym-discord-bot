@@ -3,7 +3,7 @@ module.exports = {
   description: "Reloads a command",
   cooldown: 5,
   execute(message, args) {
-    message.channel.send(`${name} : ${description}`);
+    //message.channel.send(`${name} : ${description}`);
 
     if (!args.length)
       return message.channel.send(

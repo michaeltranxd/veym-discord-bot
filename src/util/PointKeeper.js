@@ -3,6 +3,10 @@ const fs = require("fs");
 const PointMember = require("./PointMember");
 
 /*
+  Setup permissions on server using roles
+  role admin_commands @role
+
+
   They want a way to give points to HT, so that they can determine active / inactive
   they want to be able to mass give points
   and then the same with cac em
@@ -18,20 +22,6 @@ const PointMember = require("./PointMember");
   "Create X number of random teams"
   then copy that "insparational quote thing" hehehe
 
-
-  ------ Members -----
-  [x] members-add @discordname nganh
-  [x] members-remove @discordname 
-  [x] members-update @discordname nganh points
-  [x] members-list
-
-   ------ Points ------
-  [] members-points give # @discordname, # @discordname, # @discordname, ...
-  [] members-points giveall # @discordname, @discordname, @discordname, ...
-  [] members-points remove # @discordname, # @discordname, # @discordname, ...
-  [] members-points removeall # @discordname, @discordname, @discordname, ...
-  [] members-points update # @discordname, # @discordname, # @discordname, ...
-  [] members-points updateall # @discordname, @discordname, @discordname, ...
 
 */
 
@@ -214,14 +204,17 @@ class PointKeeper {
     );
   }
 
-  listMembersByName(message) {
+  // List Members by Points descending
+  // List by Nganhs
+
+  listMembersByPoints(message) {
     // Check if empty
     if (this.__members.keyArray().length === 0) {
       return message.reply(`List is empty. Please add someone`);
     }
 
-    // Sort by alphabetical
-    this.__members.sort((a, b) => {
+    // Sort by points
+    const sorted = [...this.__members].sort((a, b) => {
       let nameAString = message.guild.members.cache.get(a.id).displayName;
       let nameBString = message.guild.members.cache.get(b.id).displayName;
       if (!nameAString)
@@ -234,13 +227,63 @@ class PointKeeper {
       else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
     });
 
+    this.listMembers(message, sorted);
+  }
+
+  listMembersByNganh(message, nganh) {
+    // Check if empty
+    if (this.__members.keyArray().length === 0) {
+      return message.reply(`List is empty. Please add someone`);
+    }
+
+    // Sort by alphabetical
+    const sorted = [...this.__members].sort((a, b) => {
+      let nameAString = message.guild.members.cache.get(a.id).displayName;
+      let nameBString = message.guild.members.cache.get(b.id).displayName;
+      if (!nameAString)
+        nameAString = message.guild.members.cache.get(elem.id).user.username;
+      if (!nameBString)
+        nameBString = message.guild.members.cache.get(elem.id).user.username;
+
+      if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
+      else if (nameAString.toUpperCase() > nameBString.toUpperCase()) return 1;
+      else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
+    });
+
+    this.listMembers(message, sorted);
+  }
+
+  listMembersByName(message) {
+    // Check if empty
+    if (this.__members.keyArray().length === 0) {
+      return message.reply(`List is empty. Please add someone`);
+    }
+
+    // Sort by alphabetical
+    const sorted = [...this.__members].sort((a, b) => {
+      let nameAString = message.guild.members.cache.get(a.id).displayName;
+      let nameBString = message.guild.members.cache.get(b.id).displayName;
+      if (!nameAString)
+        nameAString = message.guild.members.cache.get(elem.id).user.username;
+      if (!nameBString)
+        nameBString = message.guild.members.cache.get(elem.id).user.username;
+
+      if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
+      else if (nameAString.toUpperCase() > nameBString.toUpperCase()) return 1;
+      else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
+    });
+
+    this.listMembers(message, sorted);
+  }
+
+  listMembers(message, members) {
     // Generate embed message
     let allNames = "";
     let allNganhs = "";
     let allPoints = "";
     let titleLength = 0;
 
-    this.__members.forEach((elem) => {
+    members.forEach((elem) => {
       let memName = `<@${elem.id}>\n`;
       let memNganh = `${elem.nganh}\n`;
       let memPoints = `${elem.points}\n`;
