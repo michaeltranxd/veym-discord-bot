@@ -8,7 +8,7 @@ module.exports = {
   description: "Add, remove, update, and list points for members",
   args: true, // Include if command requires args
   usage:
-    "give <amount> @discordname, <amount> <@discordname>, ...\n" +
+    "give <amount> <@discordname>, <amount> <@discordname>, ...\n" +
     "giveall <amount> <@discordname>, <@discordname>, ...\n" +
     "remove <amount> @discordname, <amount> <@discordname>, ...\n" +
     "removeall <amount> <@discordname>, <@discordname>, ...\n" +
