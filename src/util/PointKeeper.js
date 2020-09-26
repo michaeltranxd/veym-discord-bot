@@ -1,6 +1,9 @@
 const Discord = require("discord.js");
 const fs = require("fs");
 const PointMember = require("./PointMember");
+const { nganhInputs } = require("../util/util.json");
+
+const lodash = require("lodash");
 
 /*
   Setup permissions on server using roles
@@ -78,8 +81,7 @@ class PointKeeper {
     // Before reading from file or creating a new file (joined new server)
     // Populate with current members then write over them using the file
     client.guilds.cache.get(this.__guildid).members.cache.each((member) => {
-      let pointMember = PointMember.emptyConstructor(member.id);
-      this.__members.set(member.id, pointMember);
+      this.addJoiningMember(member);
     });
 
     try {
@@ -113,6 +115,22 @@ class PointKeeper {
           }
         }
       );
+    }
+  }
+
+  addJoiningMember(member) {
+    //only add the non-bot
+    if (!member.user.bot) {
+      let pointMember = PointMember.emptyConstructor(member.id);
+      this.__members.set(member.id, pointMember);
+    }
+  }
+
+  removeLeavingMember(member) {
+    //only add the non-bot
+    if (!member.user.bot) {
+      let pointMember = PointMember.emptyConstructor(member.id);
+      this.__members.set(member.id, pointMember);
     }
   }
 
@@ -204,76 +222,190 @@ class PointKeeper {
     );
   }
 
-  // List Members by Points descending
-  // List by Nganhs
-
-  listMembersByPoints(message) {
+  getNganhMembers(message, nganh) {
     // Check if empty
     if (this.__members.keyArray().length === 0) {
-      return message.reply(`List is empty. Please add someone`);
+      message.reply(`List is empty. Please add someone`);
+      return;
+    }
+
+    // Grab the users in the nganh
+    const filteredMembers = lodash
+      .cloneDeep(this.__members)
+      .filter((member) => {
+        return member.nganh.trim() === nganh.trim();
+      });
+
+    if (filteredMembers.keyArray().length === 0) {
+      message.reply(
+        `There were no people listed as nganh ${nganh}. Please configure using the update command`
+      );
+      return;
+    }
+
+    return filteredMembers;
+  }
+
+  getOverallMembers(message) {
+    // Check if empty
+    if (this.__members.keyArray().length === 0) {
+      message.reply(`List is empty. Please add someone`);
+      return;
+    }
+
+    return lodash.cloneDeep(this.__members);
+  }
+
+  listOfANganhByName(message, nganh) {
+    // Get Nganh
+    let nganhMembers = this.getNganhMembers(message, nganh);
+
+    // If nganh does not exist just return
+    if (!nganhMembers) {
+      return;
+    }
+
+    // Sort by name
+    const sorted = this.sortByName(message, nganhMembers);
+    return this.listMembers(message, sorted);
+  }
+
+  listOfANganhByPoints(message, nganh) {
+    // Get Nganh
+    let nganhMembers = this.getNganhMembers(message, nganh);
+
+    // If nganh does not exist just return
+    if (!nganhMembers) {
+      return;
     }
 
     // Sort by points
-    const sorted = [...this.__members].sort((a, b) => {
-      let nameAString = message.guild.members.cache.get(a.id).displayName;
-      let nameBString = message.guild.members.cache.get(b.id).displayName;
-      if (!nameAString)
-        nameAString = message.guild.members.cache.get(elem.id).user.username;
-      if (!nameBString)
-        nameBString = message.guild.members.cache.get(elem.id).user.username;
-
-      if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
-      else if (nameAString.toUpperCase() > nameBString.toUpperCase()) return 1;
-      else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
-    });
-
-    this.listMembers(message, sorted);
+    const sorted = this.sortByPoints(nganhMembers);
+    return this.listMembers(message, sorted);
   }
 
-  listMembersByNganh(message, nganh) {
-    // Check if empty
-    if (this.__members.keyArray().length === 0) {
-      return message.reply(`List is empty. Please add someone`);
-    }
+  listOverallByName(message) {
+    // Get overall
+    let overallMembers = this.getOverallMembers(message);
 
-    // Sort by alphabetical
-    const sorted = [...this.__members].sort((a, b) => {
-      let nameAString = message.guild.members.cache.get(a.id).displayName;
-      let nameBString = message.guild.members.cache.get(b.id).displayName;
-      if (!nameAString)
-        nameAString = message.guild.members.cache.get(elem.id).user.username;
-      if (!nameBString)
-        nameBString = message.guild.members.cache.get(elem.id).user.username;
-
-      if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
-      else if (nameAString.toUpperCase() > nameBString.toUpperCase()) return 1;
-      else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
-    });
-
-    this.listMembers(message, sorted);
+    // Sort overall by name
+    let sorted = this.sortByName(message, overallMembers);
+    return this.listMembers(message, sorted);
   }
 
-  listMembersByName(message) {
-    // Check if empty
-    if (this.__members.keyArray().length === 0) {
-      return message.reply(`List is empty. Please add someone`);
-    }
+  listOverallByNganhThenName(message) {
+    // Get overall
+    let overallMembers = this.getOverallMembers(message);
 
-    // Sort by alphabetical
-    const sorted = [...this.__members].sort((a, b) => {
+    // Sort overall by nganh then name
+    let sorted = this.sortByNganhThenName(message, overallMembers);
+    return this.listMembers(message, sorted);
+  }
+
+  listOverallByNganhThenPoints(message) {
+    // Get overall
+    let overallMembers = this.getOverallMembers(message);
+
+    // Sort overall by nganh then points
+    let sorted = this.sortByNganhThenPoints(overallMembers);
+    return this.listMembers(message, sorted);
+  }
+
+  listOverallByPoints(message) {
+    // Get overall
+    let overallMembers = this.getOverallMembers(message);
+
+    // Sort overall by points
+    let sorted = this.sortByPoints(overallMembers);
+    return this.listMembers(message, sorted);
+  }
+
+  sortByName(message, members) {
+    // Sort by alphabetical name
+    const sorted = members.sort((a, b) => {
       let nameAString = message.guild.members.cache.get(a.id).displayName;
       let nameBString = message.guild.members.cache.get(b.id).displayName;
       if (!nameAString)
-        nameAString = message.guild.members.cache.get(elem.id).user.username;
+        nameAString = message.guild.members.cache.get(a.id).user.username;
       if (!nameBString)
-        nameBString = message.guild.members.cache.get(elem.id).user.username;
+        nameBString = message.guild.members.cache.get(b.id).user.username;
 
       if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
       else if (nameAString.toUpperCase() > nameBString.toUpperCase()) return 1;
       else if (nameAString.toUpperCase() < nameBString.toUpperCase()) return -1;
     });
 
-    this.listMembers(message, sorted);
+    return sorted;
+  }
+
+  sortByPoints(members) {
+    // Sort by points
+    const sorted = members.sort((a, b) => {
+      if (a.points > b.points) return -1;
+      else if (a.points < b.points) return 1;
+      else return 0;
+    });
+
+    return sorted;
+  }
+
+  sortByNganhThenName(message, members) {
+    // Sort by Nganh then alphabetical within nganh
+    const sorted = members.sort((a, b) => {
+      // First sort by Nganh
+      let aIndex = nganhInputs.findIndex((elem) => {
+        return a.nganh === elem;
+      });
+      let bIndex = nganhInputs.findIndex((elem) => {
+        return b.nganh === elem;
+      });
+
+      if (aIndex < bIndex) {
+        return -1;
+      } else if (aIndex > bIndex) {
+        return 1;
+      } else if (aIndex === bIndex) {
+        let nameAString = message.guild.members.cache.get(a.id).displayName;
+        let nameBString = message.guild.members.cache.get(b.id).displayName;
+        if (!nameAString)
+          nameAString = message.guild.members.cache.get(a.id).user.username;
+        if (!nameBString)
+          nameBString = message.guild.members.cache.get(b.id).user.username;
+
+        if (nameAString.toUpperCase() === nameBString.toUpperCase()) return 0;
+        else if (nameAString.toUpperCase() > nameBString.toUpperCase())
+          return 1;
+        else if (nameAString.toUpperCase() < nameBString.toUpperCase())
+          return -1;
+      }
+    });
+
+    return sorted;
+  }
+
+  sortByNganhThenPoints(members) {
+    // Sort by Nganh then by points within nganh
+    const sorted = members.sort((a, b) => {
+      // First sort by Nganh
+      let aIndex = nganhInputs.findIndex((elem) => {
+        return a.nganh === elem;
+      });
+      let bIndex = nganhInputs.findIndex((elem) => {
+        return b.nganh === elem;
+      });
+
+      if (aIndex < bIndex) {
+        return -1;
+      } else if (aIndex > bIndex) {
+        return 1;
+      } else if (aIndex === bIndex) {
+        if (a.points > b.points) return -1;
+        else if (a.points < b.points) return 1;
+        else return 0;
+      }
+    });
+
+    return sorted;
   }
 
   listMembers(message, members) {

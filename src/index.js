@@ -26,6 +26,30 @@ client.once("ready", () => {
     client.pointKeepers.set(guild.id, new PointKeeper(client, guild.id));
   });
 
+  // Client keeps track of new members that join
+  client.on("guildMemberAdd", (member) => {
+    let pointKeeperGuild = client.pointKeepers.get(member.guild.id);
+    if (pointKeeperGuild) {
+      pointKeeperGuild.addJoiningMember(member);
+    } else {
+      console.log(
+        `ERROR (guildMemberAdd): new GuildMember's guild does not have pointKeeper`
+      );
+    }
+  });
+
+  // Client keeps track of new members that join
+  client.on("guildMemberRemove", (member) => {
+    let pointKeeperGuild = client.pointKeepers.get(member.guild.id);
+    if (pointKeeperGuild) {
+      pointKeeperGuild.removeLeavingMember(member);
+    } else {
+      console.log(
+        `ERROR (guildMemberRemove): new GuildMember's guild does not have pointKeeper`
+      );
+    }
+  });
+
   console.log("Ready!");
 });
 

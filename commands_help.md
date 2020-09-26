@@ -9,6 +9,12 @@
 - [`points removeall`](#points-removeall)
 - [`points update`](#points-update)
 - [`points updateall`](#points-updateall)
+- [`points list <nganh> name`](#points-list-<nganh>-name)
+- [`points list <nganh> points`](#points-list-<nganh>-points)
+- [`points list overall name`](#points-list-overall-name)
+- [`points list overall nganh name`](#points-list-overall-nganh-name)
+- [`points list overall nganh points`](#points-list-overall-nganh-points)
+- [`points list overall points`](#points-list-overall-points)
 
 # Commands
 
@@ -50,7 +56,7 @@
   - Single user: `!points giveall 10 @Chris`
     - Chris receives +10 points
   - Multiple users: `!points giveall 10 @Chris, @Jack, @Mindy, @Pete`
-    - Chris, Jack, Mindy, and Pete all receive 10 points
+    - Chris, Jack, Mindy, and Pete all receive +10 points
 
 ## `points remove`
 
@@ -96,15 +102,74 @@
 
 ## `points updateall`
 
-- `points updateall <amount> <@discordname>, <@discordname>, ...`
-  - Description: Updates all users supplied to have `<amount>` points
-- Usage: `!points give <amount> <@discordname>, <amount> <@discordname>, ...`
+- Description: Updates all users supplied to have `<amount>` points
+- Usage: `!points updateall <amount> <@discordname>, <@discordname>, ...`
 - Arguments
   - `<amount>` - A number for the amount of points user to receive
   - `<@discordname>` - Mention the user by typing @name
   - Every user added is seperated by a comma
 - Example:
-  - Single user: `!points giveall 10 @Chris`
+  - Single user: `!points updateall 10 @Chris`
     - Chris has 10 points
-  - Multiple users: `!points giveall 10 @Chris, @Jack, @Mindy, @Pete`
+  - Multiple users: `!points updateall 10 @Chris, @Jack, @Mindy, @Pete`
     - Chris, Jack, Mindy, and Pete all have 10 points
+
+## `points list <nganh> name`
+
+- Description: Lists the points of the users in the server that are listed as `<nganh>` and sorts by name
+- Usage: `!points list <nganh> name`
+- Arguments
+  - `<nganh>` - The nganh of the user, valid inputs (AN/TN/NS/HS/HT)
+- Example:
+  - `!points list AN name`
+    - This lists all users who are listed as AN and organizes them by name (alphabetical order)
+
+## `points list <nganh> points`
+
+- Description: Lists the points of the users in the server that are listed as `<nganh>` and sorts by points descending
+- Usage: `!points list <nganh> points`
+- Arguments
+  - `<nganh>` - The nganh of the user, valid inputs (AN/TN/NS/HS/HT)
+- Example:
+  - `!points list AN points`
+    - This lists all users who are listed as AN and organizes them by points (descending order)
+
+## `points list overall name`
+
+- Description: Lists the points of all users in the server sorted by name
+- Usage: `!points list overall name`
+- Arguments
+  - N/A
+- Example:
+  - `!points list overall name`
+    - This lists all users in the server in alphabetical order
+
+## `points list overall nganh name`
+
+- Description: Lists the points of all users in the server sorted by nganh then by name
+- Usage: `!points list overall nganh name`
+- Arguments
+  - N/A
+- Example:
+  - `!points list overall nganh name`
+    - This lists all users in the server by respective nganh (AN first, HT last) and then sorts by name (alphabetical order)
+
+## `points list overall nganh points`
+
+- Description: Lists the points of all users in the server sorted by nganh then by points descending
+- Usage: `!points list overall nganh points`
+- Arguments
+  - N/A
+- Example:
+  - `!points list overall nganh points`
+    - This lists all users in the server by respective nganh (AN first, HT last) and then sorts by points (descending order)
+
+## `points list overall points`
+
+- Description: Lists the points of all users in the server sorted by points (descending order)
+- Usage: `!points list overall points`
+- Arguments
+  - N/A
+- Example:
+  - `!points list overall points`
+    - This lists all users in the server by points (descending order)
