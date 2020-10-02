@@ -1,4 +1,4 @@
-const { prefix } = require("../config.json");
+const { prefix, devs } = require("../config.json");
 
 module.exports = {
   name: "help",
@@ -9,28 +9,63 @@ module.exports = {
     const data = [];
     const { commands } = message.client;
 
+    // Check if message came from a dev
+    let isDev = false;
+    devs.forEach((dev) => {
+      if (message.author.id === dev) {
+        isDev = true;
+      }
+    });
+
     if (!args.length) {
+      let commandList = commands
+        .filter((command) => {
+          return !command.admin_permissions || !command.dev_permissions;
+        })
+        .map((command) => command.name)
+        .join(", ");
+
+      // If not dev, we check for admin permissions
+      if (!isDev) {
+        let isAdmin = false;
+
+        // Check for permissions
+        // If insufficient permissions then just say we don't recognize that command
+        let guildAdminRoles = message.client.guildMetadatas.get(
+          message.guild.id
+        ).roles_admin;
+
+        guildAdminRoles.forEach((adminRole) => {
+          if (message.member.roles.cache.get(adminRole.id)) {
+            isAdmin = true;
+            console.log("we admin_help");
+          }
+        });
+
+        // If the user is owner of guild then automatic admin
+        if (message.author.id === message.guild.ownerID) isAdmin = true;
+
+        if (isAdmin)
+          commandList = commands
+            .filter((command) => {
+              return !command.dev_permissions;
+            })
+            .map((command) => command.name)
+            .join(", ");
+      }
+
       data.push("Here's a list of all my commands:");
-      data.push(commands.map((command) => command.name).join(", "));
+      data.push(commandList);
       data.push(
         `\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`
       );
 
-      return message.author
-        .send(data, { split: true })
-        .then(() => {
-          if (message.channel.type === "dm") return;
-          message.reply("I've sent you a DM with all my commands!");
-        })
-        .catch((error) => {
-          console.error(
-            `Could not send help DM to ${message.author.tag}.\n`,
-            error
-          );
-          message.reply(
-            "it seems like I can't DM you! Do you have DMs disabled?"
-          );
-        });
+      return message.channel.send(data, { split: true }).catch((error) => {
+        console.error(error);
+        message.reply(
+          "It seems like there was an unexpected error. Please contact a developer"
+        );
+      });
     }
 
     const name = args[0].toLowerCase();

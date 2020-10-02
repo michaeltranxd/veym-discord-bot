@@ -1,6 +1,7 @@
 module.exports = {
   name: "reload",
   description: "Reloads a command",
+  dev_permissions: true,
   cooldown: 5,
   execute(message, args) {
     //message.channel.send(`${name} : ${description}`);

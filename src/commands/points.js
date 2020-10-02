@@ -2,11 +2,10 @@ const { prefix } = require("../config.json");
 
 const multi_point_commands = ["give", "remove", "update"];
 const single_point_commands = ["giveall", "removeall", "updateall"];
-const { nganhInputs } = require("../util/util.json");
 
 module.exports = {
   name: "points",
-  description: "Add, remove, update, and list points for members",
+  description: "Add, remove, and update, points for members",
   args: true, // Include if command requires args
   usage:
     "give <amount> <@discordname>, <amount> <@discordname>, ...\n" +
@@ -14,100 +13,11 @@ module.exports = {
     "remove <amount> @discordname, <amount> <@discordname>, ...\n" +
     "removeall <amount> <@discordname>, <@discordname>, ...\n" +
     "update <amount> @discordname, <amount> <@discordname>, ...\n" +
-    "updateall <amount> <@discordname>, <@discordname>, ...\n" +
-    "list <nganh> name\n" +
-    "list <nganh> points\n" +
-    "list overall name\n" +
-    "list overall nganh name\n" +
-    "list overall nganh points\n" +
-    "list overall points", // Include if args is true
+    "updateall <amount> <@discordname>, <@discordname>, ...", // Include if args is true
+  admin_permissions: true,
   guildOnly: true, // Include if exclusive to server
   cooldown: 1,
   execute(message, args) {
-    // Check if its list first
-    if (args[0] === "list") {
-      // Check if supplied an argument
-      if (args.length < 2) {
-        return message.reply(
-          `Error: I was expecting another argument! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-        );
-      }
-
-      if (args[1] === "overall") {
-        // list overall ...
-        // Check if we have arguments after overall
-        if (args.length < 3) {
-          return message.reply(
-            `Error: Make sure you have supplied how you want to sort overall! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-
-        // Check if its name and points
-        if (args[2] === "name") {
-          return message.client.pointKeepers
-            .get(message.guild.id)
-            .listOverallByName(message);
-        } else if (args[2] === "points") {
-          return message.client.pointKeepers
-            .get(message.guild.id)
-            .listOverallByPoints(message);
-        } else if (args[2] === "nganh") {
-          if (args.length < 4) {
-            return message.reply(
-              `Error: Make sure you have supplied how you want to sort each nganh! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-            );
-          }
-
-          if (args[3] === "name") {
-            return message.client.pointKeepers
-              .get(message.guild.id)
-              .listOverallByNganhThenName(message);
-          } else if (args[3] === "points") {
-            return message.client.pointKeepers
-              .get(message.guild.id)
-              .listOverallByNganhThenPoints(message);
-          } else {
-            return message.reply(
-              `Error: Make sure you have supplied a valid sort! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-            );
-          }
-        } // end of args[2] === 'nganh'
-        else {
-          // Don't recognize...
-          return message.reply(
-            `Error: Make sure you have supplied how you want to sort each nganh! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-      } else if (nganhInputs.includes(args[1])) {
-        // list <nganh> ...
-        // Check if we have arguments after <nganh>
-        if (args.length < 3) {
-          return message.reply(
-            `Error: Make sure you have supplied how you want to sort nganh ${args[1]}! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-
-        // Check if its name and points
-        if (args[2] === "name") {
-          return message.client.pointKeepers
-            .get(message.guild.id)
-            .listOfANganhByName(message, args[1]);
-        } else if (args[2] === "points") {
-          return message.client.pointKeepers
-            .get(message.guild.id)
-            .listOfANganhByPoints(message, args[1]);
-        } else {
-          return message.reply(
-            `Error: Make sure you have supplied a valid sort! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-      } else {
-        return message.reply(
-          `Error: I dont recognize that! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-        );
-      }
-    }
-
     // Check if supplied an amount
     if (args.length < 2) {
       return message.reply(

@@ -1,4 +1,5 @@
 {
   "prefix": "your-prefix-goes-here",
-  "token": "your-token-goes-here"
+  "token": "your-token-goes-here",
+  "devs": ["devs-ids-go-here"]
 }
