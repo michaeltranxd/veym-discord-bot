@@ -141,7 +141,7 @@ class PointKeeper {
 
     let pointMember = new PointMember(memberID, memberNganh, memberPoints);
 
-    this.__members.set(memberID, pointMember);
+    this.updateMember(memberID, mem);
 
     return message.reply(`Member <@${memberID}> has been added to the list`);
   }
@@ -156,6 +156,7 @@ class PointKeeper {
     }
 
     this.__members.delete(memberID);
+    this.save();
 
     return message.reply(
       `Member ${pointMember.name} (<@${pointMember.id}>) has been removed from the list`
@@ -169,8 +170,7 @@ class PointKeeper {
     }
 
     mem.nganh = memberNganh;
-
-    this.__members.set(memberID, mem);
+    this.save();
 
     return message.reply(
       `Member <@${memberID}> has been updated to nganh ${memberNganh} on the list`
@@ -185,7 +185,7 @@ class PointKeeper {
 
     mem.points = mem.points + memberPoints;
 
-    this.__members.set(memberID, mem);
+    this.save();
 
     return message.reply(
       `Member <@${memberID}> points has been updated on the list`
@@ -200,7 +200,7 @@ class PointKeeper {
 
     mem.points = Math.max(0, mem.points - memberPoints);
 
-    this.__members.set(memberID, mem);
+    this.save();
 
     return message.reply(
       `Member <@${memberID}> points has been updated on the list`
@@ -215,7 +215,7 @@ class PointKeeper {
 
     mem.points = memberPoints;
 
-    this.__members.set(memberID, mem);
+    this.save();
 
     return message.reply(
       `Member <@${memberID}> points has been updated on the list`
@@ -469,6 +469,7 @@ class PointKeeper {
     });
 
     json = JSON.stringify(json);
+    console.log(json);
 
     fs.writeFileSync(
       `./util/guildpoints/${this.__guildid}.json`,

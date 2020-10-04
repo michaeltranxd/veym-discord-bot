@@ -17,10 +17,10 @@ module.exports = {
       }
     });
 
-    if (!args.length) {
+    if (args.length === 0) {
       let commandList = commands
         .filter((command) => {
-          return !command.admin_permissions || !command.dev_permissions;
+          return !command.admin_permissions && !command.dev_permissions;
         })
         .map((command) => command.name)
         .join(", ");
@@ -36,7 +36,8 @@ module.exports = {
         ).roles_admin;
 
         guildAdminRoles.forEach((adminRole) => {
-          if (message.member.roles.cache.get(adminRole.id)) {
+          console.log(adminRole);
+          if (message.member.roles.cache.get(adminRole)) {
             isAdmin = true;
             console.log("we admin_help");
           }
@@ -52,6 +53,8 @@ module.exports = {
             })
             .map((command) => command.name)
             .join(", ");
+      } else {
+        commandList = commands.map((command) => command.name);
       }
 
       data.push("Here's a list of all my commands:");

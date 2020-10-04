@@ -18,8 +18,9 @@ class GuildMetadata {
 
       let json = JSON.parse(str);
 
+      console.log(json);
       // Parse data out
-      if (json.__presetup) this.__presetup = json.__presetup;
+      if (json.__presetup !== undefined) this.__presetup = json.__presetup;
       if (json.__roles_admin) this.__roles_admin = json.__roles_admin;
     } catch (error) {
       console.log(

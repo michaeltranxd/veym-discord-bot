@@ -66,20 +66,28 @@ client.once("ready", () => {
   console.log("Ready!");
 });
 
+/*
+ * Conditions of ignoring messages
+ * 1.) Does not have the prefix
+ * 2.) Is not sent by a non-robot user
+ * 3.) Message in DM that is sent by a non DEV
+ *
+ *
+ * Conditions of rejecting messages
+ * 1.)
+ *
+ */
+
 client.on("message", (message) => {
   // Ignore the message if it was sent by the bot or if it doesn't have our prefix
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-  // Check if message came from a dev
-  let isDev = false;
-  devs.forEach((dev) => {
-    if (message.author.id === dev) {
-      isDev = true;
-    }
-  });
-
   // If command sent through DM & author is not a dev then ignore
-  if (message.channel.type !== "text" && !isDev) return;
+  if (
+    message.channel.type !== "text" &&
+    !devs.find((dev) => dev === message.author.id)
+  )
+    return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
@@ -89,6 +97,7 @@ client.on("message", (message) => {
       (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
     );
 
+  // Check for presetup is completed
   // Alert user if havent done presetup only check when in server
   if (message.channel.type === "text") {
     if (
@@ -108,7 +117,7 @@ client.on("message", (message) => {
     );
   }
 
-  // Messaage was sent in guild then we check permissions
+  // Messaage was sent in guild then we check permissions, else we assume its a dev
   if (message.channel.type === "text") {
     let isAdmin = false;
 
@@ -130,7 +139,8 @@ client.on("message", (message) => {
     // Dont have permissions
     if (
       (!isAdmin && command.admin_permissions) ||
-      (!isDev && command.dev_permissions)
+      (!devs.find((dev) => dev === message.author.id) &&
+        command.dev_permissions)
     ) {
       const helpCommand = client.commands.get("help");
       return message.reply(
