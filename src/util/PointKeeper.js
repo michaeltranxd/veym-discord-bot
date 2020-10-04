@@ -469,7 +469,7 @@ class PointKeeper {
     });
 
     json = JSON.stringify(json);
-    console.log(json);
+    //console.log(json);
 
     fs.writeFileSync(
       `./util/guildpoints/${this.__guildid}.json`,

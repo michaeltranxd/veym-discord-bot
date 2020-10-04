@@ -16,6 +16,7 @@
 - [`points-list overall nganh name`](#points-list-overall-nganh-name)
 - [`points-list overall nganh points`](#points-list-overall-nganh-points)
 - [`points-list overall points`](#points-list-overall-points)
+- [`inspirationalquote`](#inspirationalquote)
 
 # Commands
 
@@ -186,3 +187,13 @@
 - Example:
   - `!points-list overall points`
     - This lists all users in the server by points (descending order)
+
+## `inspirationalquote`
+
+- Description: Provides a holy quote to the one that asked
+- Usage: `!inspirationalquote`
+- Arguments
+  - N/A
+- Example:
+  - `!inspirationalquote`
+    - This lists a quote pulled from /util/inspirationalquotes.txt
