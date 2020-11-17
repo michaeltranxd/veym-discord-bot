@@ -134,34 +134,34 @@ class PointKeeper {
     }
   }
 
-  addMember(message, memberID, memberNganh, memberPoints) {
-    if (this.__members.get(memberID)) {
-      return message.reply(`Error: User already added.`);
-    }
+  // addMember(message, memberID, memberNganh, memberPoints) {
+  //   if (this.__members.get(memberID)) {
+  //     return message.reply(`Error: User already added.`);
+  //   }
 
-    let pointMember = new PointMember(memberID, memberNganh, memberPoints);
+  //   let pointMember = new PointMember(memberID, memberNganh, memberPoints);
 
-    this.updateMember(memberID, mem);
+  //   this.updateMember(memberID, mem);
 
-    return message.reply(`Member <@${memberID}> has been added to the list`);
-  }
+  //   return message.reply(`Member <@${memberID}> has been added to the list`);
+  // }
 
-  removeMember(message, memberID) {
-    let pointMember = this.__members.get(memberID);
+  // removeMember(message, memberID) {
+  //   let pointMember = this.__members.get(memberID);
 
-    if (!pointMember) {
-      return message.reply(
-        `Error: That user is not added to the list previously! Could not delete.`
-      );
-    }
+  //   if (!pointMember) {
+  //     return message.reply(
+  //       `Error: That user is not added to the list previously! Could not delete.`
+  //     );
+  //   }
 
-    this.__members.delete(memberID);
-    this.save();
+  //   this.__members.delete(memberID);
+  //   this.save();
 
-    return message.reply(
-      `Member ${pointMember.name} (<@${pointMember.id}>) has been removed from the list`
-    );
-  }
+  //   return message.reply(
+  //     `Member ${pointMember.name} (<@${pointMember.id}>) has been removed from the list`
+  //   );
+  // }
 
   updateMember(message, memberID, memberNganh) {
     let mem = this.__members.get(memberID);
@@ -171,9 +171,15 @@ class PointKeeper {
 
     mem.nganh = memberNganh;
     this.save();
+  }
+
+  updateMembers(message, memberIDs, nganhs) {
+    for (let index = 0; index < memberIDs.length; index++) {
+      this.updateMember(message, memberIDs[index], nganhs[index]);
+    }
 
     return message.reply(
-      `Member <@${memberID}> has been updated to nganh ${memberNganh} on the list`
+      `All members have been updated to their corresponding nganhs`
     );
   }
 
@@ -410,9 +416,12 @@ class PointKeeper {
 
   listMembers(message, members) {
     // Generate embed message
-    let allNames = "";
-    let allNganhs = "";
-    let allPoints = "";
+    let allNames = [""];
+    let allNganhs = [""];
+    let allPoints = [""];
+
+    // Tracks how many rows have 1024 chars
+    let rows1024 = 0;
     let titleLength = 0;
 
     members.forEach((elem) => {
@@ -420,9 +429,24 @@ class PointKeeper {
       let memNganh = `${elem.nganh}\n`;
       let memPoints = `${elem.points}\n`;
 
-      allNames += memName;
-      allNganhs += memNganh;
-      allPoints += memPoints;
+      // Before we add we check if its going to hit our 1024 limit
+      let maxLength = Math.max(
+        allNames[rows1024].length + memName.length,
+        allNganhs[rows1024].length + memNganh.length,
+        allPoints[rows1024].length + memPoints.length
+      );
+
+      if (maxLength >= 1024) {
+        // We hit max 1024 chars, so go next
+        rows1024++;
+        allNames.push("");
+        allNganhs.push("");
+        allPoints.push("");
+      }
+
+      allNames[rows1024] += memName;
+      allNganhs[rows1024] += memNganh;
+      allPoints[rows1024] += memPoints;
 
       // Get maximum size by finding the person's nickname if exists then tries for actual username
       let nameString = message.guild.members.cache.get(elem.id).displayName;
@@ -453,13 +477,28 @@ class PointKeeper {
           name: pad(title, titleLength, "+", 3),
           value: `\u200B`,
         },
-        { name: "Name", value: allNames, inline: true },
-        { name: "Nganh", value: allNganhs, inline: true },
-        { name: "Points", value: `${allPoints}`, inline: true }
+        { name: "Name", value: allNames[0], inline: true },
+        { name: "Nganh", value: allNganhs[0], inline: true },
+        { name: "Points", value: `${allPoints[0]}`, inline: true }
       );
+
+    // Loop through the rest if any and append
+    for (let index = 1; index < rows1024; index++) {
+      embeddedMessage.addFields(
+        {
+          name: pad(title, titleLength, "+", 3),
+          value: `\u200B`,
+        },
+        { name: "\u200B", value: allNames[index], inline: true },
+        { name: "\u200B", value: allNganhs[index], inline: true },
+        { name: "\u200B", value: `${allPoints[index]}`, inline: true }
+      );
+    }
 
     message.channel.send(embeddedMessage);
   }
+
+  buildEmbeddedMessage() {}
 
   save() {
     let json = [];
