@@ -414,7 +414,7 @@ class PointKeeper {
     return sorted;
   }
 
-  listMembers(message, members) {
+  async listMembers(message, members) {
     // Generate embed message
     let allNames = [""];
     let allNganhs = [""];
@@ -467,38 +467,31 @@ class PointKeeper {
 
     titleLength = Math.min(titleLength, 60);
 
-    let title = "Members";
+    let title = pad("Members", titleLength, "+", 3);
 
-    // Create embed for it
-    const embeddedMessage = new Discord.MessageEmbed()
-      .setColor("#0099ff")
-      .addFields(
-        {
-          name: pad(title, titleLength, "+", 3),
-          value: `\u200B`,
-        },
-        { name: "Name", value: allNames[0], inline: true },
-        { name: "Nganh", value: allNganhs[0], inline: true },
-        { name: "Points", value: `${allPoints[0]}`, inline: true }
-      );
+    // Loop through the rest if any and send seperate messages
+    for (let index = 0; index <= rows1024; index++) {
+      if (rows1024 > 0) {
+        title = pad(`Members Page ${index + 1}`, titleLength, "+", 3);
+      }
 
-    // Loop through the rest if any and append
-    for (let index = 1; index < rows1024; index++) {
-      embeddedMessage.addFields(
-        {
-          name: pad(title, titleLength, "+", 3),
-          value: `\u200B`,
-        },
-        { name: "\u200B", value: allNames[index], inline: true },
-        { name: "\u200B", value: allNganhs[index], inline: true },
-        { name: "\u200B", value: `${allPoints[index]}`, inline: true }
-      );
+      // Create embed for it
+      const embeddedMessage = new Discord.MessageEmbed()
+        .setColor("#0099ff")
+        .addFields(
+          {
+            name: title,
+            value: `\u200B`,
+          },
+          { name: "Name", value: allNames[index], inline: true },
+          { name: "Nganh", value: allNganhs[index], inline: true },
+          { name: "Points", value: `${allPoints[index]}`, inline: true }
+        );
+
+      // Send messsage and wait until it is sent before generating another one
+      await message.channel.send(embeddedMessage);
     }
-
-    message.channel.send(embeddedMessage);
   }
-
-  buildEmbeddedMessage() {}
 
   save() {
     let json = [];
