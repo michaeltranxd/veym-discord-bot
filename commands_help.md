@@ -1,3 +1,12 @@
+# Preface
+
+The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! The idea is to have a point system and automate any tedious tasks.
+
+# Current Features:
+ 
+  - Add/Deduct points
+  - Give a random Bible quote
+
 # In-depth Documentation on Commands
 
 ## Overview
