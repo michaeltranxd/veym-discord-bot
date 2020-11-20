@@ -18,6 +18,11 @@ module.exports = {
   guildOnly: true, // Include if exclusive to server
   cooldown: 1,
   execute(message, args) {
+    // Ids to provide to give,remove,update
+    let gMemberIds = [];
+    // Points to provide to give,remove,update
+    let gMemberPoints = [];
+
     // Check if supplied an amount
     if (args.length < 2) {
       return message.reply(
@@ -32,13 +37,13 @@ module.exports = {
       );
     }
 
-    // Check if multi user+points or single points for every user
+    // Check if multi user+multipoints or single points for every user
     if (
       multi_point_commands.find((com) => {
         return args[0] === com;
       })
     ) {
-      // Its multi user+points so we parse differently
+      // Its multi user+multipoints so we parse differently
       // Combine the string then delimit by comma, then every data member has (# @discordname)
       let newArgs = args.slice(1).join(" ").split(",");
       newArgs.forEach((element) => {
@@ -75,20 +80,27 @@ module.exports = {
           );
         }
 
+        // Add memberId
+        gMemberIds.push(gMemberId);
+        // Add points
+        gMemberPoints.push(amount);
+      });
+
+      if (gMemberIds.length === newArgs.length) {
         if (args[0] === "give") {
           message.client.pointKeepers
             .get(message.guild.id)
-            .givePoints(message, gMember.id, amount);
+            .givePointsMany(message, gMemberIds, gMemberPoints);
         } else if (args[0] === "remove") {
           message.client.pointKeepers
             .get(message.guild.id)
-            .removePoints(message, gMember.id, amount);
+            .removePointsMany(message, gMemberIds, gMemberPoints);
         } else if (args[0] === "update") {
           message.client.pointKeepers
             .get(message.guild.id)
-            .updatePoints(message, gMember.id, amount);
+            .updatePointsMany(message, gMemberIds, gMemberPoints);
         }
-      });
+      }
     } // End of multi_point_commands if statement
     else if (
       single_point_commands.find((com) => {
@@ -124,20 +136,25 @@ module.exports = {
           );
         }
 
-        if (args[0] === "giveall") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .givePoints(message, gMember.id, amount);
-        } else if (args[0] === "removeall") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .removePoints(message, gMember.id, amount);
-        } else if (args[0] === "updateall") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .updatePoints(message, gMember.id, amount);
-        }
+        // Add memberId
+        gMemberIds.push(gMemberId);
+        // Add points
+        gMemberPoints.push(amount);
       });
+
+      if (args[0] === "giveall") {
+        message.client.pointKeepers
+          .get(message.guild.id)
+          .givePointsAll(message, gMemberIds, amount);
+      } else if (args[0] === "removeall") {
+        message.client.pointKeepers
+          .get(message.guild.id)
+          .removePointsAll(message, gMemberIds, amount);
+      } else if (args[0] === "updateall") {
+        message.client.pointKeepers
+          .get(message.guild.id)
+          .updatePointsAll(message, gMemberIds, amount);
+      }
     } // End of single_point_commands if statement
     else {
       return message.reply(

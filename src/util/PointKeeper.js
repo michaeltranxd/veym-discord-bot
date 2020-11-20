@@ -178,6 +178,12 @@ class PointKeeper {
       this.updateMember(message, memberIDs[index], nganhs[index]);
     }
 
+    if (memberIDs.length === 1) {
+      return message.reply(
+        `Member <@${memberIDs[0]}> has been updated to nganh ${nganhs[0]}`
+      );
+    }
+
     return message.reply(
       `All members have been updated to their corresponding nganhs`
     );
@@ -192,10 +198,52 @@ class PointKeeper {
     mem.points = mem.points + memberPoints;
 
     this.save();
+    return `<@${memberID}> has been awarded ${memberPoints} points! They now have ${mem.points} points! Congratulations!! 🥳`;
+  }
 
-    return message.reply(
-      `Member <@${memberID}> points has been updated on the list`
-    );
+  givePointsMany(message, memberIDs, memberPoints) {
+    let awardStr = [""];
+    let awardStrIndex = 0;
+    for (let index = 0; index < memberIDs.length; index++) {
+      let str =
+        this.givePoints(message, memberIDs[index], memberPoints[index]) + "\n";
+      if (awardStr[awardStrIndex].length + str.length > 1024) {
+        awardStr.push(str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+      }
+    }
+
+    this.sendMultipleMessages(message, awardStr);
+  }
+
+  givePointsAll(message, memberIds, points) {
+    let awardStr = ["Members: "];
+    let awardStrIndex = 0;
+    // Grab the memberName from id
+    memberIds.forEach((id, index) => {
+      let str = `<@${id}>`;
+      let ending = ` have been all awarded ${points} points. Congratulations!! 🥳`;
+
+      this.givePoints(message, id, points);
+
+      if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
+        awardStr[awardStrIndex] += ending;
+        awardStr.push("Members: " + str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+        if (index !== memberIds.length - 1) {
+          // Add commas only if its not the last one!
+          awardStr[awardStrIndex] += ", ";
+        } else {
+          awardStr[awardStrIndex] += ending;
+        }
+      }
+    });
+
+    this.sendMultipleMessages(message, awardStr);
   }
 
   removePoints(message, memberID, memberPoints) {
@@ -208,9 +256,53 @@ class PointKeeper {
 
     this.save();
 
-    return message.reply(
-      `Member <@${memberID}> points has been updated on the list`
-    );
+    return `<@${memberID}> has been deducted ${memberPoints} points! They now have ${mem.points} points! 😢`;
+  }
+
+  removePointsMany(message, memberIDs, memberPoints) {
+    let awardStr = [""];
+    let awardStrIndex = 0;
+    for (let index = 0; index < memberIDs.length; index++) {
+      let str =
+        this.removePoints(message, memberIDs[index], memberPoints[index]) +
+        "\n";
+      if (awardStr[awardStrIndex].length + str.length > 1024) {
+        awardStr.push(str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+      }
+    }
+
+    this.sendMultipleMessages(message, awardStr);
+  }
+
+  removePointsAll(message, memberIds, points) {
+    let awardStr = ["Members: "];
+    let awardStrIndex = 0;
+    // Grab the memberName from id
+    memberIds.forEach((id, index) => {
+      let str = `<@${id}>`;
+      let ending = ` have been all deducted ${points} points. 😢`;
+
+      this.removePoints(message, id, points);
+
+      if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
+        awardStr[awardStrIndex] += ending;
+        awardStr.push("Members: " + str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+        if (index !== memberIds.length - 1) {
+          // Add commas only if its not the last one!
+          awardStr[awardStrIndex] += ", ";
+        } else {
+          awardStr[awardStrIndex] += ending;
+        }
+      }
+    });
+
+    this.sendMultipleMessages(message, awardStr);
   }
 
   updatePoints(message, memberID, memberPoints) {
@@ -223,9 +315,53 @@ class PointKeeper {
 
     this.save();
 
-    return message.reply(
-      `Member <@${memberID}> points has been updated on the list`
-    );
+    return `<@${memberID}> has been updated ${memberPoints} points! They now have ${mem.points} points!`;
+  }
+
+  updatePointsMany(message, memberIDs, memberPoints) {
+    let awardStr = [""];
+    let awardStrIndex = 0;
+    for (let index = 0; index < memberIDs.length; index++) {
+      let str =
+        this.updatePoints(message, memberIDs[index], memberPoints[index]) +
+        "\n";
+      if (awardStr[awardStrIndex].length + str.length > 1024) {
+        awardStr.push(str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+      }
+    }
+
+    this.sendMultipleMessages(message, awardStr);
+  }
+
+  updatePointsAll(message, memberIds, points) {
+    let awardStr = ["Members: "];
+    let awardStrIndex = 0;
+    // Grab the memberName from id
+    memberIds.forEach((id, index) => {
+      let str = `<@${id}>`;
+      let ending = ` have been all updated to ${points} points.`;
+
+      this.updatePoints(message, id, points);
+
+      if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
+        awardStr[awardStrIndex] += ending;
+        awardStr.push("Members: " + str);
+        awardStrIndex++;
+      } else {
+        awardStr[awardStrIndex] += str;
+        if (index !== memberIds.length - 1) {
+          // Add commas only if its not the last one!
+          awardStr[awardStrIndex] += ", ";
+        } else {
+          awardStr[awardStrIndex] += ending;
+        }
+      }
+    });
+
+    this.sendMultipleMessages(message, awardStr);
   }
 
   getNganhMembers(message, nganh) {
@@ -490,6 +626,12 @@ class PointKeeper {
 
       // Send messsage and wait until it is sent before generating another one
       await message.channel.send(embeddedMessage);
+    }
+  }
+
+  async sendMultipleMessages(message, strArray) {
+    for (let index = 0; index < strArray.length; index++) {
+      await message.channel.send(strArray[index]);
     }
   }
 
