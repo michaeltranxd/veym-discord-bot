@@ -603,12 +603,12 @@ class PointKeeper {
 
     titleLength = Math.min(titleLength, 60);
 
-    let title = pad("Members", titleLength, "+", 3);
+    let title = pad("Points Leaderboard", titleLength + 4, "+", 3);
 
     // Loop through the rest if any and send seperate messages
     for (let index = 0; index <= rows1024; index++) {
       if (rows1024 > 0) {
-        title = pad(`Members Page ${index + 1}`, titleLength, "+", 3);
+        title = pad(`Points Leaderboard ${index + 1}`, titleLength, "+", 3);
       }
 
       // Create embed for it
