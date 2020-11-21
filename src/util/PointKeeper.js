@@ -5,6 +5,8 @@ const { nganhInputs } = require("../util/util.json");
 
 const lodash = require("lodash");
 
+const medals = ["🥇", "🥈", "🥉"];
+
 /*
   Setup permissions on server using roles
   role admin_commands @role
@@ -423,7 +425,7 @@ class PointKeeper {
 
     // Sort by points
     const sorted = this.sortByPoints(nganhMembers);
-    return this.listMembers(message, sorted);
+    return this.listLeaderboard(message, sorted);
   }
 
   listOverallByName(message) {
@@ -450,7 +452,7 @@ class PointKeeper {
 
     // Sort overall by nganh then points
     let sorted = this.sortByNganhThenPoints(overallMembers);
-    return this.listMembers(message, sorted);
+    return this.listLeaderboard(message, sorted);
   }
 
   listOverallByPoints(message) {
@@ -459,7 +461,7 @@ class PointKeeper {
 
     // Sort overall by points
     let sorted = this.sortByPoints(overallMembers);
-    return this.listMembers(message, sorted);
+    return this.listLeaderboard(message, sorted);
   }
 
   sortByName(message, members) {
@@ -564,6 +566,194 @@ class PointKeeper {
       let memName = `<@${elem.id}>\n`;
       let memNganh = `${elem.nganh}\n`;
       let memPoints = `${elem.points}\n`;
+
+      // Before we add we check if its going to hit our 1024 limit
+      let maxLength = Math.max(
+        allNames[rows1024].length + memName.length,
+        allNganhs[rows1024].length + memNganh.length,
+        allPoints[rows1024].length + memPoints.length
+      );
+
+      if (maxLength >= 1024) {
+        // We hit max 1024 chars, so go next
+        rows1024++;
+        allNames.push("");
+        allNganhs.push("");
+        allPoints.push("");
+      }
+
+      allNames[rows1024] += memName;
+      allNganhs[rows1024] += memNganh;
+      allPoints[rows1024] += memPoints;
+
+      // Get maximum size by finding the person's nickname if exists then tries for actual username
+      let nameString = message.guild.members.cache.get(elem.id).displayName;
+      if (!nameString)
+        nameString = message.guild.members.cache.get(elem.id).user.username;
+
+      // Since ${elem.id} is bunch of numbers, the numbers arent actually displayed. Its the username/nickname.
+      // We take the max length of names/nganh/points including the headers and find the longest
+      let memNameLength = Math.max(`@${nameString}`.length, `Names`.length);
+      let memNganhLength = Math.max(memNganh.length - 1, `Nganh`.length);
+      let memPointsLength = Math.max(memPoints.length - 1, `Points`.length);
+
+      titleLength = Math.max(
+        titleLength,
+        memNameLength + memNganhLength + memPointsLength
+      );
+    });
+
+    titleLength = Math.min(titleLength, 60);
+
+    let title = pad("Points Leaderboard", titleLength + 4, "+", 3);
+
+    // Loop through the rest if any and send seperate messages
+    for (let index = 0; index <= rows1024; index++) {
+      if (rows1024 > 0) {
+        title = pad(`Points Leaderboard ${index + 1}`, titleLength, "+", 3);
+      }
+
+      // Create embed for it
+      const embeddedMessage = new Discord.MessageEmbed()
+        .setColor("#0099ff")
+        .addFields(
+          {
+            name: title,
+            value: `\u200B`,
+          },
+          { name: "Name", value: allNames[index], inline: true },
+          { name: "Nganh", value: allNganhs[index], inline: true },
+          { name: "Points", value: `${allPoints[index]}`, inline: true }
+        );
+
+      // Send messsage and wait until it is sent before generating another one
+      await message.channel.send(embeddedMessage);
+    }
+  }
+
+  async listLeaderboard(message, members) {
+    // Generate embed message
+    let allNames = [""];
+    let allNganhs = [""];
+    let allPoints = [""];
+
+    // Tracks how many rows have 1024 chars
+    let rows1024 = 0;
+    let titleLength = 0;
+
+    // This maps members to points then filters so that only unique points exist
+    // Then will sort descending and slice the top three so we are left with top three unique
+    // points
+
+    // Get the top three of every nganh and assign 1st, 2nd, 3rd
+    let anList = members
+      .filter((member) => {
+        return member.nganh === nganhInputs[0]; // AN
+      })
+      .array()
+      .map((mem) => {
+        return mem.points;
+      })
+      .filter((point, i, self) => {
+        return self.indexOf(point) === i;
+      })
+      .sort(function (a, b) {
+        return b - a;
+      })
+      .slice(0, 3);
+    let tnList = members
+      .filter((member) => {
+        return member.nganh === nganhInputs[1]; // TN
+      })
+      .array()
+      .map((mem) => {
+        return mem.points;
+      })
+      .filter((point, i, self) => {
+        return self.indexOf(point) === i;
+      })
+      .sort(function (a, b) {
+        return b - a;
+      })
+      .slice(0, 3);
+    let nsList = members
+      .filter((member) => {
+        return member.nganh === nganhInputs[2]; // NS
+      })
+      .array()
+      .map((mem) => {
+        return mem.points;
+      })
+      .filter((point, i, self) => {
+        return self.indexOf(point) === i;
+      })
+      .sort(function (a, b) {
+        return b - a;
+      })
+      .slice(0, 3);
+    let hsList = members
+      .filter((member) => {
+        return member.nganh === nganhInputs[3]; // HS
+      })
+      .array()
+      .map((mem) => {
+        return mem.points;
+      })
+      .filter((point, i, self) => {
+        return self.indexOf(point) === i;
+      })
+      .sort(function (a, b) {
+        return b - a;
+      })
+      .slice(0, 3);
+    let htList = members
+      .filter((member) => {
+        return member.nganh === nganhInputs[4]; // HT
+      })
+      .array()
+      .map((mem) => {
+        return mem.points;
+      })
+      .filter((point, i, self) => {
+        return self.indexOf(point) === i;
+      })
+      .sort(function (a, b) {
+        return b - a;
+      })
+      .slice(0, 3);
+
+    let nganhLists = [];
+    nganhLists.push(anList);
+    nganhLists.push(tnList);
+    nganhLists.push(nsList);
+    nganhLists.push(hsList);
+    nganhLists.push(htList);
+
+    console.log(nganhLists);
+
+    members.forEach((elem) => {
+      // Print-friendly vars
+      let memName = `<@${elem.id}>\n`;
+      let memNganh = `${elem.nganh}\n`;
+      let memPoints = `${elem.points}\n`;
+
+      // Search if current member is top three of anything
+      let nganhIndex = nganhInputs.findIndex((nganh) => {
+        return nganh === elem.nganh;
+      });
+
+      if (nganhIndex !== 5 && nganhIndex !== -1) {
+        // Found nganh so lets check if user has same points
+        let place = 1; // 1st, 2nd, 3rd
+        nganhLists[nganhIndex].forEach((point, i) => {
+          if (point === elem.points) {
+            // Matched points
+
+            // Assign the places
+            memName = `${medals[i]} ${memName}`;
+          }
+        });
+      }
 
       // Before we add we check if its going to hit our 1024 limit
       let maxLength = Math.max(

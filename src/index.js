@@ -126,8 +126,8 @@ client.on("message", (message) => {
     let guildAdminRoles = client.guildMetadatas.get(message.guild.id)
       .roles_admin;
 
-    guildAdminRoles.forEach((adminRole) => {
-      if (message.member.roles.cache.get(adminRole.id)) {
+    guildAdminRoles.forEach((adminRoleId) => {
+      if (message.member.roles.cache.get(adminRoleId)) {
         isAdmin = true;
         console.log("we admin");
       }
