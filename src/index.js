@@ -58,9 +58,10 @@ client.once("ready", () => {
   client.on("guildCreate", (guild) => {
     client.pointKeepers.set(guild.id, new PointKeeper(client, guild.id));
     client.guildMetadatas.set(guild.id, new GuildMetadata(client, guild.id));
-    guild.systemChannel.send(
-      `Please contact the server owner to set me up. They can start setup by running the command \`${prefix}setup\` :)`
-    );
+    if (guild.systemChannel)
+      guild.systemChannel.send(
+        `Please contact the server owner to set me up. They can start setup by running the command \`${prefix}setup\` :)`
+      );
   });
 
   console.log("Ready!");
