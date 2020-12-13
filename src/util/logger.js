@@ -31,6 +31,7 @@ class Logger {
   log(type, message) {
     const timestamp = new Date().toISOString();
     this.logs.push({ type, timestamp, message });
+    console.log(`(${timestamp}) - ${this.getTypeString(type)}, ${message}`);
   }
 
   save() {
