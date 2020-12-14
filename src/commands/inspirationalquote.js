@@ -34,6 +34,10 @@ watcher.on("change", (path) => {
       if (success) {
         quoteFileChanged = false;
         authorFileChanged = false;
+        logger.log(
+          logger.NORMAL,
+          "New quotes and authors have been updated, files have been changed"
+        );
       }
     } catch (error) {
       // prettier-ignore
@@ -78,10 +82,6 @@ function readFromFile() {
     // At this points quotes and authors are good to update
     quotes = newQuotes;
     authors = newAuthors;
-    logger.log(
-      logger.NORMAL,
-      "New quotes and authors have been updated, files have been changed"
-    );
 
     return true;
   } catch (error) {

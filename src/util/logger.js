@@ -1,6 +1,8 @@
 const fs = require("fs");
 
 class Logger {
+  __maxLogsLength = 1024;
+  __timeStart = new Date().toISOString().replace(/:/g, "-");
   constructor() {
     this.logs = [];
   }
@@ -32,20 +34,39 @@ class Logger {
     const timestamp = new Date().toISOString();
     this.logs.push({ type, timestamp, message });
     console.log(`(${timestamp}) - ${this.getTypeString(type)}, ${message}`);
+
+    // Save logs when reached over maxLogsLength logs
+    if (this.logs.length >= this.__maxLogsLength) {
+      this.save();
+      this.logs = [];
+    }
+  }
+
+  logsToString() {
+    let logsAsString = "";
+
+    // Generate a string holding all the data from the logs
+    this.logs.forEach((log, i) => {
+      let type = this.getTypeString(log.type);
+      let logMessage = `${log.timestamp}, ${type}, ${log.message}\n`;
+      logsAsString += logMessage;
+    });
+
+    return logsAsString;
   }
 
   save() {
+    const strToWrite = this.logsToString();
+
     try {
-      var file = fs.createWriteStream("./util/logs/${timestamp}.txt");
-      this.logs.forEach((log) => {
-        logMessage = `${log[1]}, ${getTypeString(log[0])}, ${log[2]}\n`;
-        file.write(logMessage);
-      });
-      //arr.forEach(function(v) { file.write(v.join(', ') + '\n'); });
-      file.end();
+      fs.appendFileSync(
+        `util/logs/${this.__timeStart}.log`,
+        strToWrite,
+        `utf8`
+      );
     } catch (error) {
       /* error handling */
-      console.log("Issue saving file in logger.js");
+      console.log("Issue saving logs in logger.js");
       console.log(error);
     }
   }

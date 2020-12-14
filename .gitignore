@@ -3,3 +3,4 @@ src/node_modules
 src/util/guildpoints/*.json
 src/util/guildmetadata/*.json
 src/old_commands/*
+src/util/logs/*.log

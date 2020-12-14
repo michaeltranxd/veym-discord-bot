@@ -3,6 +3,7 @@ const Discord = require("discord.js");
 const { prefix, token, devs } = require("./config.json");
 const PointKeeper = require("./util/PointKeeper");
 const GuildMetadata = require("./util/GuildMetadata");
+const logger = require("./util/logger");
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
@@ -64,7 +65,7 @@ client.once("ready", () => {
       );
   });
 
-  console.log("Ready!");
+  logger.log(logger.NORMAL, "Ready!");
 });
 
 /*
@@ -223,6 +224,8 @@ function exitHandler() {
     client.pointKeepers.get(guild.id).save();
     client.guildMetadatas.get(guild.id).save();
   });
+
+  logger.save();
 
   client.destroy();
 }
