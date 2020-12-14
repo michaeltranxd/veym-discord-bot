@@ -3,6 +3,7 @@ const fs = require("fs");
 class Logger {
   __maxLogsLength = 1024;
   __timeStart = new Date().toISOString().replace(/:/g, "-");
+  __debug = true;
   constructor() {
     this.logs = [];
   }
@@ -23,14 +24,21 @@ class Logger {
     return 1;
   }
 
+  get DEBUG() {
+    return 3;
+  }
+
   getTypeString(type) {
     if (type == -1) return "ERROR";
     else if (type == 2) return "WARNING";
     else if (type == 1) return "NORMAL";
+    else if (type == 3) return "DEBUG";
     return "UNDEFINED";
   }
 
   log(type, message) {
+    if (!this.__debug) return;
+
     const timestamp = new Date().toISOString();
     this.logs.push({ type, timestamp, message });
     console.log(`(${timestamp}) - ${this.getTypeString(type)}, ${message}`);
@@ -40,6 +48,11 @@ class Logger {
       this.save();
       this.logs = [];
     }
+  }
+
+  logCommand(message, commandName) {
+    let logMessage = `MsgContent:"${message.content}" | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
+    this.log(this.NORMAL, logMessage);
   }
 
   logsToString() {
