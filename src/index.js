@@ -4,6 +4,7 @@ const { prefix, token, devs } = require("./config.json");
 const PointKeeper = require("./util/PointKeeper");
 const GuildMetadata = require("./util/GuildMetadata");
 const logger = require("./util/logger");
+const permissions = require("./util/permissions");
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
@@ -37,8 +38,9 @@ client.once("ready", () => {
     if (pointKeeperGuild) {
       pointKeeperGuild.addJoiningMember(member);
     } else {
-      console.log(
-        `ERROR (guildMemberAdd): new GuildMember's guild does not have pointKeeper`
+      logger.log(
+        logger.ERROR,
+        `(guildMemberAdd): [${member.user.username}] joined ${member.guild.name}, but this guild does not have pointKeeper`
       );
     }
   });
@@ -49,8 +51,9 @@ client.once("ready", () => {
     if (pointKeeperGuild) {
       pointKeeperGuild.removeLeavingMember(member);
     } else {
-      console.log(
-        `ERROR (guildMemberRemove): new GuildMember's guild does not have pointKeeper`
+      logger.log(
+        logger.ERROR,
+        `(guildMemberRemove): [${member.user.username}] left ${member.guild.name}, but this guild does not have pointKeeper`
       );
     }
   });
@@ -63,6 +66,10 @@ client.once("ready", () => {
       guild.systemChannel.send(
         `Please contact the server owner to set me up. They can start setup by running the command \`${prefix}setup\` :)`
       );
+    logger.log(
+      logger.NORMAL,
+      `Recently joined [${guild.name}], they need to run setup`
+    );
   });
 
   logger.log(logger.NORMAL, "Ready!");
@@ -81,15 +88,13 @@ client.once("ready", () => {
  */
 
 client.on("message", (message) => {
+  let isDev = permissions.isDev(message);
+
   // Ignore the message if it was sent by the bot or if it doesn't have our prefix
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
   // If command sent through DM & author is not a dev then ignore
-  if (
-    message.channel.type !== "text" &&
-    !devs.find((dev) => dev === message.author.id)
-  )
-    return;
+  if (message.channel.type !== "text" && !isDev) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
@@ -102,13 +107,19 @@ client.on("message", (message) => {
   // Check for presetup is completed
   // Alert user if havent done presetup only check when in server
   if (message.channel.type === "text") {
+    // metadata requires presetup, reject if not !setup or not owner of server doing setup
     if (
       client.guildMetadatas.get(message.guild.id).needPresetup() &&
       (commandName !== "setup" || message.guild.owner.id !== message.author.id)
-    )
+    ) {
+      logger.log(
+        logger.DEBUG,
+        `[${message.guild.name}] still needs to set me up`
+      );
       return message.reply(
         `Please contact the server owner to set me up. They can start setup by running the command \`${prefix}setup\` :)`
       );
+    }
   }
 
   // command is not valid (we dont recognize this command)
@@ -121,28 +132,12 @@ client.on("message", (message) => {
 
   // Messaage was sent in guild then we check permissions, else we assume its a dev
   if (message.channel.type === "text") {
-    let isAdmin = false;
-
-    // Check for permissions
-    // If insufficient permissions then just say we don't recognize that command
-    let guildAdminRoles = client.guildMetadatas.get(message.guild.id)
-      .roles_admin;
-
-    guildAdminRoles.forEach((adminRoleId) => {
-      if (message.member.roles.cache.get(adminRoleId)) {
-        isAdmin = true;
-        console.log("we admin");
-      }
-    });
-
-    // If the user is owner of guild then automatic admin
-    if (message.author.id === message.guild.ownerID) isAdmin = true;
+    let isAdmin = permissions.isAdmin(message);
 
     // Dont have permissions
     if (
       (!isAdmin && command.admin_permissions) ||
-      (!devs.find((dev) => dev === message.author.id) &&
-        command.dev_permissions)
+      (!isDev && command.dev_permissions)
     ) {
       const helpCommand = client.commands.get("help");
       return message.reply(
@@ -159,11 +154,20 @@ client.on("message", (message) => {
       reply += `\nPlease type \`${prefix}help ${command.name}\` for the usage`;
     }
 
+    logger.log(
+      logger.DEBUG,
+      `${message.author} did not provide args for command [${command.name}]`
+    );
+
     return message.channel.send(reply);
   }
 
   // Check for guilds only
   if (command.guildOnly && message.channel.type !== "text") {
+    logger.log(
+      logger.DEBUG,
+      `${message.author} tried to execute command [${command.name}] in DMs`
+    );
     return message.reply("I can't execute that command inside DMs!");
   }
 
@@ -189,9 +193,16 @@ client.on("message", (message) => {
         )
         .then((msg) => {
           msg.delete({ timeout: 5 * 1000 });
+          logger.log(
+            logger.DEBUG,
+            `${message.author.username} using command [${command.name}] too fast!`
+          );
         })
         .catch((error) => {
-          console.log("Couldn't delete for some reason...", error);
+          logger.log(
+            logger.ERROR,
+            `Could not delete message, cooldown message` + error
+          );
         });
     }
   }
@@ -200,9 +211,13 @@ client.on("message", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
+    logger.log(
+      logger.NORMAL,
+      `MsgContent:"${message.content} | Handling '${command.name}'`
+    );
     command.execute(message, args);
   } catch (error) {
-    console.error(error);
+    logger.log(logger.ERROR, `Error executing command ` + error);
     message.reply("there was an error trying to execute that command!");
   }
 });
@@ -211,8 +226,7 @@ client.on("message", (message) => {
 // client.on("debug", console.log);
 
 client.on("error", (error) => {
-  console.log(error);
-  console.log("invalid");
+  logger.log(logger.ERROR, `Client ran into an error ` + error);
 });
 
 client.login(token);
@@ -231,18 +245,18 @@ function exitHandler() {
 }
 
 process.on("SIGINT", () => {
-  console.log("Process interrupted");
+  logger.log(logger.WARNING, `Process interrupted, SIGINT signal`);
   exitHandler();
   process.exit();
 });
 
 process.on("SIGTERM", () => {
-  console.log("Process terminated");
+  logger.log(logger.WARNING, `Process terminated, SIGTERM signal`);
   exitHandler();
   //process.exit();
 });
 
 process.on("uncaughtException", (error) => {
-  console.log(error);
+  logger.log(logger.ERROR, `uncaughtException, i should do better ` + error);
   exitHandler();
 });

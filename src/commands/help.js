@@ -51,12 +51,17 @@ function handleCommandList(message) {
     `\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`
   );
 
-  return message.channel.send(data, { split: true }).catch((error) => {
-    logger.log(logger.ERROR, `help.js ${error}`);
-    message.reply(
-      "It seems like there was an unexpected error. Please contact a developer"
-    );
-  });
+  return message.channel
+    .send(data, { split: true })
+    .then((msg) => {
+      logger.logCommand(message, module.exports.name);
+    })
+    .catch((error) => {
+      logger.log(logger.ERROR, `help.js ${error}`);
+      message.reply(
+        "It seems like there was an unexpected error. Please contact a developer"
+      );
+    });
 }
 
 function handleCommandHelp(message, args) {
@@ -92,9 +97,6 @@ function handleCommandHelp(message, args) {
   data.push(`**Cooldown:** ${command.cooldown || 3} second(s)`);
 
   return message.channel.send(data, { split: true }).then((msg) => {
-    logger.log(
-      logger.NORMAL,
-      `Successfully executed help command in guild ${message.guild}`
-    );
+    logger.logCommand(message, module.exports.name);
   });
 }

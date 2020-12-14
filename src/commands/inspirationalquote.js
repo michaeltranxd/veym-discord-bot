@@ -114,6 +114,10 @@ module.exports = {
     }
 
     let randomIndex = Math.floor(Math.random() * quotes.length);
-    message.reply(`${quotes[randomIndex]} - **${authors[randomIndex]}**`);
+    message
+      .reply(`${quotes[randomIndex]} - **${authors[randomIndex]}**`)
+      .then((msg) => {
+        logger.logCommand(message, module.exports.name);
+      });
   },
 };
