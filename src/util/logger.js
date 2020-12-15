@@ -36,7 +36,8 @@ class Logger {
     if (type == -1) return "ERROR";
     else if (type == 2) return "WARNING";
     else if (type == 1) return "NORMAL";
-    else if (type == 3) return "DEBUG";
+    else if (type == -2) return "DEBUG";
+    else if (type == 3) return "SUCCESS";
     return "UNDEFINED";
   }
 
@@ -62,6 +63,11 @@ class Logger {
   logCommandSuccess(message, commandName) {
     let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
     this.log(this.SUCCESS, logMessage);
+  }
+
+  logCommandError(message, commandName, error) {
+    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Ran [${message.content}] using command '${commandName}', but failed due to error: [${error}]`;
+    this.log(this.ERROR, logMessage);
   }
 
   logsToString() {

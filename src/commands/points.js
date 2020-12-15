@@ -19,22 +19,33 @@ module.exports = {
   guildOnly: true, // Include if exclusive to server
   cooldown: 1,
   execute(message, args) {
-    // Ids to provide to give,remove,update
-    let gMemberIds = [];
-    // Points to provide to give,remove,update
-    let gMemberPoints = [];
+    let validCommands = multi_point_commands.concat(single_point_commands);
+    let isValidCmd = validCommands.find((cmd) => {
+      return args[0] === cmd;
+    });
 
-    // Check if supplied an amount
-    if (args.length < 2) {
+    // Check for valid args[0]
+    if (!isValidCmd) {
+      logger.logCommandError(
+        message,
+        this.name,
+        `User did not supply a valid command`
+      );
+      // prettier-ignore
       return message.reply(
-        `Error: Make sure you have supplied an amount! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+        `Error: Make sure you are using the right command! It must be one of the following \`${validCommands.join(",")}\`. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
       );
     }
 
-    // Check if supplied a user
+    // Check if supplied an amount and user
     if (args.length < 3) {
+      logger.logCommandError(
+        message,
+        this.name,
+        `User did not supply an amount and user, args.length < 2`
+      );
       return message.reply(
-        `Error: Make sure you have supplied a user! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+        `Error: Make sure you have supplied an amount and user! Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
       );
     }
 
@@ -49,128 +60,189 @@ module.exports = {
 
     // (give, remove, update)
     if (isMultiPointCmd) {
-      // Its multi user+multipoints so we parse differently
-      // Combine the string then delimit by comma, then every data member has (# @discordname)
-      let newArgs = args.slice(1).join(" ").split(",");
-      newArgs.forEach((element) => {
-        let splitArray = element.trim().split(" ");
-
-        if (splitArray.length !== 2) {
-          return message.reply(
-            `Error: "${element}" - seems to not have the right format. Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-
-        // Grab the amount and check if its a valid number
-        let amount = Number(splitArray[0]);
-        if (isNaN(amount))
-          return message.reply(
-            `Error: "${element}" - seems to not have a valid number. Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-
-        // Validity of @discordname; check if args[0] is a person in the server
-        let gMemberMatch = splitArray[1].match(/[0-9]+/);
-        if (!gMemberMatch) {
-          return message.reply(
-            `Error: "${element}" - seems to not have a valid @<name>! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
-
-        let gMemberId = gMemberMatch[0];
-        let guildMembers = message.guild.members.cache;
-        let gMember = guildMembers.get(gMemberId);
-
-        if (!gMember) {
-          return message.reply(
-            `Error: "${element}" - seems to not have a valid member! Please @<name> a member of the server!`
-          );
-        }
-
-        // Add memberId
-        gMemberIds.push(gMemberId);
-        // Add points
-        gMemberPoints.push(amount);
-      });
-
-      if (gMemberIds.length === newArgs.length) {
-        handle(args[0], message, gMemberIds, gMemberPoints);
-      }
+      // Get pairs of users in format of (amount @<name>) delimited by commas
+      let pointPairs = args.slice(1).join("").split(",");
+      handlePoints(args[0], message, pointPairs);
     } // End of multi_point_commands if statement
     else if (isSinglePointCmd) {
-      // (giveall, removeall, updateall)
-
-      // Grab the amount and check if its a valid number
-      let amount = Number(args[1]);
-      if (isNaN(amount))
-        return message.reply(
-          `Error: "${element}" - seems to not have a valid number. Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+      // Check if its a valid point amount
+      if (!isValidPointAmount(args[1])) {
+        logger.logCommandError(
+          message,
+          module.exports.name,
+          `${element}" does not seem to have a valid number`
         );
+        message.reply(
+          `Error: "${element}" - seems to not have a valid number. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+        );
+        return;
+      }
 
-      // Combine the name string then delimit by comma, then every data member is (@discordname)
-      let newArgs = args.slice(2).join(" ").split(",");
-      newArgs.forEach((element) => {
-        // Validity of @discordname; check if args[0] is a person in the server
-        let gMemberMatch = element.trim().match(/[0-9]+/);
-        if (!gMemberMatch) {
-          return message.reply(
-            `Error: "${element}" - seems to not have a valid @<name>! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-          );
-        }
+      let amount = getPointAmountFromString(args[1]);
 
-        let gMemberId = gMemberMatch[0];
-        let guildMembers = message.guild.members.cache;
-        let gMember = guildMembers.get(gMemberId);
-
-        if (!gMember) {
-          return message.reply(
-            `Error: "${element}" - seems to not have a valid member! Please @<name> a member of the server!`
-          );
-        }
-
-        // Add memberId
-        gMemberIds.push(gMemberId);
-        // Add points
-        gMemberPoints.push(amount);
+      // Combine the name string then delimit by comma, then add amount in front of every data member
+      // so the format is (amount @discordname)
+      let pointPairs = args.slice(2).join("").split(",");
+      pointPairs = pointPairs.map((element) => {
+        return `${amount} ${element}`;
       });
 
-      handle(args[0], message, gMemberIds, gMemberPoints[0]);
+      handlePoints(args[0], message, pointPairs);
     } // End of single_point_commands if statement
     else {
+      logger.logCommandError(
+        message,
+        this.name,
+        `This should never happen, points.js`
+      );
       return message.reply(
-        `Error: Make sure you input the right command. Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+        `Error: Make sure you input the right command. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
       );
     }
   },
 };
 
-async function handle(cmdName, message, gMemberIds, gMemberPoints) {
+async function handlePoints(cmdName, message, pointPairs) {
+  // Ids provided by user
+  let gMemberIds = [];
+  // Points provided by user
+  let gMemberPoints = [];
+
+  for (const pair of pointPairs) {
+    let splitArray = pair.trim().split(" ");
+
+    if (splitArray.length !== 2) {
+      logger.logCommandError(
+        message,
+        module.exports.name,
+        `"${pair}" does not have the right format`
+      );
+      return message.reply(
+        `Error: "${pair}" - seems to not have the right format. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      );
+    }
+
+    // Check if its a valid point amount
+    if (!isValidPointAmount(splitArray[0])) {
+      logger.logCommandError(
+        message,
+        module.exports.name,
+        `${pair}" does not seem to have a valid number`
+      );
+      message.reply(
+        `Error: "${pair}" - seems to not have a valid number. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      );
+      return;
+    }
+
+    // Validity of @discordname; check if right format of @<name>
+    if (!isValidAtNameFormat(splitArray[1])) {
+      logger.logCommandError(
+        message,
+        module.exports.name,
+        `${pair}" does not have a valid @<name> format`
+      );
+      message.reply(
+        `Error: "${pair}" - seems to not have a valid @<name> format! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      );
+      return;
+    }
+
+    let amount = getPointAmountFromString(splitArray[0]);
+    let memberId = getMemberIdFromAtName(splitArray[1]);
+
+    // Validity of @discordname, check if valid gMember of guild
+    if (!isValidMemberId(message.guild, memberId)) {
+      logger.logCommandError(
+        message,
+        module.exports.name,
+        `${pair}" does not have a valid @<name> that is in the server`
+      );
+      message.reply(
+        `Error: "${pair}" - seems to not exist in the current server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      );
+      return;
+    }
+
+    // Add memberId
+    gMemberIds.push(memberId);
+    // Add points
+    gMemberPoints.push(amount);
+  }
+
+  if (gMemberIds.length != pointPairs.length) {
+    logger.logCommandError(
+      message,
+      module.exports.name,
+      `gMemberIds.length != newArgs.length!, missing memberid?`
+    );
+    return message.reply(
+      `Error: Please double check your members that you have tagged`
+    );
+  }
+
+  let cmdSuccess;
   if (cmdName === "give") {
-    console.log(
-      await message.client.pointKeepers
-        .get(message.guild.id)
-        .givePointsMany(message, gMemberIds, gMemberPoints)
-    );
+    cmdSuccess = await message.client.pointKeepers
+      .get(message.guild.id)
+      .givePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "remove") {
-    console.log(
-      message.client.pointKeepers
-        .get(message.guild.id)
-        .removePointsMany(message, gMemberIds, gMemberPoints)
-    );
+    cmdSuccess = await message.client.pointKeepers
+      .get(message.guild.id)
+      .removePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "update") {
-    message.client.pointKeepers
+    cmdSuccess = await message.client.pointKeepers
       .get(message.guild.id)
       .updatePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "giveall") {
-    message.client.pointKeepers
+    cmdSuccess = await message.client.pointKeepers
       .get(message.guild.id)
       .givePointsAll(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "removeall") {
-    message.client.pointKeepers
+    cmdSuccess = await message.client.pointKeepers
       .get(message.guild.id)
       .removePointsAll(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "updateall") {
-    message.client.pointKeepers
+    cmdSuccess = await message.client.pointKeepers
       .get(message.guild.id)
       .updatePointsAll(message, gMemberIds, gMemberPoints);
   }
+
+  if (!cmdSuccess) {
+    // ERROR
+    logger.logCommandError(
+      message,
+      cmdName,
+      `Error in running command [points ${cmdName}]`
+    );
+    return;
+  }
+
+  logger.logCommandSuccess(message, `points ${cmdName}`);
+}
+
+function getMemberIdFromAtName(memAtName) {
+  let gMemberMatch = memAtName.match(/[0-9]+/);
+  return gMemberMatch ? gMemberMatch[0] : null;
+}
+
+function isValidAtNameFormat(atName) {
+  // Validity of @discordname; check if right format of @<name>
+  let gMemberMatch = atName.match(/[0-9]+/);
+  return gMemberMatch ? true : false;
+}
+function isValidMemberId(guild, gMemberId) {
+  let guildMembers = guild.members.cache;
+  let gMember = guildMembers.get(gMemberId);
+  //check if args[0] is a person in the server
+  return gMember ? true : false;
+}
+
+function isValidPointAmount(amount) {
+  // Grab the amount and check if its a valid number
+  return Number(isNaN(amount)) ? false : true;
+}
+
+function getPointAmountFromString(amountString) {
+  return Number(amountString);
 }
