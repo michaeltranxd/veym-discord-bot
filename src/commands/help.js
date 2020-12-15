@@ -97,6 +97,6 @@ function handleCommandHelp(message, args) {
   data.push(`**Cooldown:** ${command.cooldown || 3} second(s)`);
 
   return message.channel.send(data, { split: true }).then((msg) => {
-    logger.logCommand(message, module.exports.name);
+    logger.logCommandSuccess(message, module.exports.name);
   });
 }

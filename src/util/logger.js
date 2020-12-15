@@ -25,6 +25,10 @@ class Logger {
   }
 
   get DEBUG() {
+    return -2;
+  }
+
+  get SUCCESS() {
     return 3;
   }
 
@@ -51,8 +55,13 @@ class Logger {
   }
 
   logCommand(message, commandName) {
-    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
+    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Handling '${commandName}' command in guild [${message.guild.name}]`;
     this.log(this.NORMAL, logMessage);
+  }
+
+  logCommandSuccess(message, commandName) {
+    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
+    this.log(this.SUCCESS, logMessage);
   }
 
   logsToString() {

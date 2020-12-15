@@ -211,10 +211,7 @@ client.on("message", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    logger.log(
-      logger.NORMAL,
-      `MsgContent:"${message.content} | Handling '${command.name}'`
-    );
+    logger.logCommand(message, command.name);
     command.execute(message, args);
   } catch (error) {
     logger.log(logger.ERROR, `Error executing command ` + error);

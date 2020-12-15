@@ -45,7 +45,7 @@ module.exports = {
     message.channel
       .send(`Command \`${command.name}\` was reloaded!`)
       .then((msg) => {
-        logger.logCommand(message, module.exports.name);
+        logger.logCommandSuccess(message, module.exports.name);
       });
   },
 };

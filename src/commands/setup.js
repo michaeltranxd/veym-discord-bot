@@ -109,7 +109,7 @@ module.exports = {
         `I have successfully configured to allow the following roles to have admin privileges: ${admin_string}\nPlease use \`${prefix}help\` command to learn more about my commands`
       )
       .then((msg) => {
-        logger.logCommand(message, module.exports.name);
+        logger.logCommandSuccess(message, module.exports.name);
         logger.log(
           logger.NORMAL,
           `GuildMember: [${message.author.tag}] has succesfully configured for [${message.guild.name}] with roles: ${admin_string}`

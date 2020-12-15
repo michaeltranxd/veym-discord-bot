@@ -117,7 +117,7 @@ module.exports = {
     message
       .reply(`${quotes[randomIndex]} - **${authors[randomIndex]}**`)
       .then((msg) => {
-        logger.logCommand(message, module.exports.name);
+        logger.logCommandSuccess(message, module.exports.name);
       });
   },
 };

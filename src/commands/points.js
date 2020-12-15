@@ -1,4 +1,5 @@
 const { prefix } = require("../config.json");
+const logger = require("../util/logger");
 
 const multi_point_commands = ["give", "remove", "update"];
 const single_point_commands = ["giveall", "removeall", "updateall"];
@@ -37,12 +38,17 @@ module.exports = {
       );
     }
 
-    // Check if multi user+multipoints or single points for every user
-    if (
-      multi_point_commands.find((com) => {
-        return args[0] === com;
-      })
-    ) {
+    // command with users and points delimited by comma so every user has its own point gain/loss/update
+    let isMultiPointCmd = multi_point_commands.find((cmd) => {
+      return args[0] === cmd;
+    });
+    // command ending with -all, give points for every one listed
+    let isSinglePointCmd = single_point_commands.find((cmd) => {
+      return args[0] === cmd;
+    });
+
+    // (give, remove, update)
+    if (isMultiPointCmd) {
       // Its multi user+multipoints so we parse differently
       // Combine the string then delimit by comma, then every data member has (# @discordname)
       let newArgs = args.slice(1).join(" ").split(",");
@@ -87,27 +93,12 @@ module.exports = {
       });
 
       if (gMemberIds.length === newArgs.length) {
-        if (args[0] === "give") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .givePointsMany(message, gMemberIds, gMemberPoints);
-        } else if (args[0] === "remove") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .removePointsMany(message, gMemberIds, gMemberPoints);
-        } else if (args[0] === "update") {
-          message.client.pointKeepers
-            .get(message.guild.id)
-            .updatePointsMany(message, gMemberIds, gMemberPoints);
-        }
+        handle(args[0], message, gMemberIds, gMemberPoints);
       }
     } // End of multi_point_commands if statement
-    else if (
-      single_point_commands.find((com) => {
-        return args[0] === com;
-      })
-    ) {
-      // Its single points then list of users so we parse differently
+    else if (isSinglePointCmd) {
+      // (giveall, removeall, updateall)
+
       // Grab the amount and check if its a valid number
       let amount = Number(args[1]);
       if (isNaN(amount))
@@ -142,19 +133,7 @@ module.exports = {
         gMemberPoints.push(amount);
       });
 
-      if (args[0] === "giveall") {
-        message.client.pointKeepers
-          .get(message.guild.id)
-          .givePointsAll(message, gMemberIds, amount);
-      } else if (args[0] === "removeall") {
-        message.client.pointKeepers
-          .get(message.guild.id)
-          .removePointsAll(message, gMemberIds, amount);
-      } else if (args[0] === "updateall") {
-        message.client.pointKeepers
-          .get(message.guild.id)
-          .updatePointsAll(message, gMemberIds, amount);
-      }
+      handle(args[0], message, gMemberIds, gMemberPoints[0]);
     } // End of single_point_commands if statement
     else {
       return message.reply(
@@ -163,3 +142,35 @@ module.exports = {
     }
   },
 };
+
+async function handle(cmdName, message, gMemberIds, gMemberPoints) {
+  if (cmdName === "give") {
+    console.log(
+      await message.client.pointKeepers
+        .get(message.guild.id)
+        .givePointsMany(message, gMemberIds, gMemberPoints)
+    );
+  } else if (cmdName === "remove") {
+    console.log(
+      message.client.pointKeepers
+        .get(message.guild.id)
+        .removePointsMany(message, gMemberIds, gMemberPoints)
+    );
+  } else if (cmdName === "update") {
+    message.client.pointKeepers
+      .get(message.guild.id)
+      .updatePointsMany(message, gMemberIds, gMemberPoints);
+  } else if (cmdName === "giveall") {
+    message.client.pointKeepers
+      .get(message.guild.id)
+      .givePointsAll(message, gMemberIds, gMemberPoints);
+  } else if (cmdName === "removeall") {
+    message.client.pointKeepers
+      .get(message.guild.id)
+      .removePointsAll(message, gMemberIds, gMemberPoints);
+  } else if (cmdName === "updateall") {
+    message.client.pointKeepers
+      .get(message.guild.id)
+      .updatePointsAll(message, gMemberIds, gMemberPoints);
+  }
+}
