@@ -1,43 +1,6 @@
 const { prefix } = require("../config.json");
 const Discord = require("discord.js");
-
-let emoji = [
-  ":one:",
-  ":two",
-  ":three:",
-  ":four:",
-  ":five:",
-  ":six:",
-  ":seven:",
-  ":eight:",
-  ":nine:",
-  ":regional_indicator_a:",
-  ":regional_indicator_b:",
-  ":regional_indicator_c:",
-  ":regional_indicator_d:",
-  ":regional_indicator_e:",
-  ":regional_indicator_f:",
-  ":regional_indicator_g:",
-  ":regional_indicator_h:",
-  ":regional_indicator_i:",
-  ":regional_indicator_j:",
-  ":regional_indicator_k:",
-  ":regional_indicator_l:",
-  ":regional_indicator_m:",
-  ":regional_indicator_n:",
-  ":regional_indicator_o:",
-  ":regional_indicator_p:",
-  ":regional_indicator_q:",
-  ":regional_indicator_r:",
-  ":regional_indicator_s:",
-  ":regional_indicator_t:",
-  ":regional_indicator_u:",
-  ":regional_indicator_v:",
-  ":regional_indicator_w:",
-  ":regional_indicator_x:",
-  ":regional_indicator_y:",
-  ":regional_indicator_z:",
-];
+const logger = require("../util/logger");
 
 module.exports = {
   name: "setup",
@@ -56,6 +19,10 @@ module.exports = {
 
       if (message.guild.roles.cache.keyArray().length === 1) {
         // No roles
+        logger.log(
+          logger.WARNING,
+          `There are no roles in the guild ${message.guild.name} besides @everyone`
+        );
         return message.reply("Please create a role for the admins");
       }
 
@@ -135,12 +102,18 @@ module.exports = {
     ).roles_admin = adminRoles;
     message.client.guildMetadatas.get(message.guild.id).finishPresetup();
 
-    console.log("how'd they know");
-
     let admin_string = args.join();
 
-    return message.reply(
-      `I have successfully configured to allow the following roles to have admin privileges: ${admin_string}\nPlease use \`${prefix}help\` command to learn more about my commands`
-    );
+    return message
+      .reply(
+        `I have successfully configured to allow the following roles to have admin privileges: ${admin_string}\nPlease use \`${prefix}help\` command to learn more about my commands`
+      )
+      .then((msg) => {
+        logger.logCommand(message, module.exports.name);
+        logger.log(
+          logger.NORMAL,
+          `GuildMember: [${message.author.tag}] has succesfully configured for [${message.guild.name}] with roles: ${admin_string}`
+        );
+      });
   },
 };

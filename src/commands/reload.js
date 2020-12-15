@@ -1,3 +1,5 @@
+const logger = require("../util/logger");
+
 module.exports = {
   name: "reload",
   description: "Reloads a command",
@@ -10,10 +12,13 @@ module.exports = {
       return message.channel.send(
         `You didn't pass any command to reload, ${message.author}!`
       );
+
+    let commandList = message.client.commands;
+
     const commandName = args[0].toLowerCase();
     const command =
-      message.client.commands.get(commandName) ||
-      message.client.commands.find(
+      commandList.get(commandName) ||
+      commandList.find(
         (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
       );
 
@@ -28,12 +33,19 @@ module.exports = {
       const newCommand = require(`./${command.name}.js`);
       message.client.commands.set(newCommand.name, newCommand);
     } catch (error) {
-      console.log(error);
+      logger.log(
+        logger.ERROR,
+        `Issue reloading command ${command.name} ` + error
+      );
       message.channel.send(
         `There was an error while reloading a command \`${command.name}\`:\n\`${error.message}\``
       );
     }
 
-    message.channel.send(`Command \`${command.name}\` was reloaded!`);
+    message.channel
+      .send(`Command \`${command.name}\` was reloaded!`)
+      .then((msg) => {
+        logger.logCommand(message, module.exports.name);
+      });
   },
 };
