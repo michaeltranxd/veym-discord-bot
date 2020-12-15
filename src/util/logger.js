@@ -51,7 +51,7 @@ class Logger {
   }
 
   logCommand(message, commandName) {
-    let logMessage = `MsgContent:"${message.content}" | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
+    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
     this.log(this.NORMAL, logMessage);
   }
 
