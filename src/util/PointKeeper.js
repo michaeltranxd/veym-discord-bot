@@ -4,30 +4,14 @@ const PointMember = require("./PointMember");
 const { nganhInputs } = require("../util/util.json");
 
 const lodash = require("lodash");
+const logger = require("./logger");
+const { time } = require("console");
 
 const medals = ["🥇", "🥈", "🥉"];
 
 /*
   Setup permissions on server using roles
-  role admin_commands @role
-
-
-  They want a way to give points to HT, so that they can determine active / inactive
-  they want to be able to mass give points
-  and then the same with cac em
-  That's all they want. 
-
-  i really think it would be cool to do some small "bells and whistles" features too
-  like:
-
-  "Print out a random HT's name"
-
-  "Print out a random NS's name"
-
-  "Create X number of random teams"
-  then copy that "insparational quote thing" hehehe
-
-
+  @role
 */
 
 /**
@@ -203,7 +187,7 @@ class PointKeeper {
     return `<@${memberID}> has been awarded ${memberPoints} points! They now have ${mem.points} points! Congratulations!! 🥳`;
   }
 
-  givePointsMany(message, memberIDs, memberPoints) {
+  async givePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -217,18 +201,18 @@ class PointKeeper {
       }
     }
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
-  givePointsAll(message, memberIds, points) {
+  async givePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
     memberIds.forEach((id, index) => {
       let str = `<@${id}>`;
-      let ending = ` have been all awarded ${points} points. Congratulations!! 🥳`;
+      let ending = ` have been all awarded ${points[index]} points. Congratulations!! 🥳`;
 
-      this.givePoints(message, id, points);
+      this.givePoints(message, id, points[index]);
 
       if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
         awardStr[awardStrIndex] += ending;
@@ -245,7 +229,7 @@ class PointKeeper {
       }
     });
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
   removePoints(message, memberID, memberPoints) {
@@ -261,7 +245,7 @@ class PointKeeper {
     return `<@${memberID}> has been deducted ${memberPoints} points! They now have ${mem.points} points! 😢`;
   }
 
-  removePointsMany(message, memberIDs, memberPoints) {
+  async removePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -276,18 +260,18 @@ class PointKeeper {
       }
     }
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
-  removePointsAll(message, memberIds, points) {
+  async removePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
     memberIds.forEach((id, index) => {
       let str = `<@${id}>`;
-      let ending = ` have been all deducted ${points} points. 😢`;
+      let ending = ` have been all deducted ${points[index]} points. 😢`;
 
-      this.removePoints(message, id, points);
+      this.removePoints(message, id, points[index]);
 
       if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
         awardStr[awardStrIndex] += ending;
@@ -304,7 +288,7 @@ class PointKeeper {
       }
     });
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
   updatePoints(message, memberID, memberPoints) {
@@ -320,7 +304,7 @@ class PointKeeper {
     return `<@${memberID}> has been updated ${memberPoints} points! They now have ${mem.points} points!`;
   }
 
-  updatePointsMany(message, memberIDs, memberPoints) {
+  async updatePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -335,18 +319,18 @@ class PointKeeper {
       }
     }
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
-  updatePointsAll(message, memberIds, points) {
+  async updatePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
     memberIds.forEach((id, index) => {
       let str = `<@${id}>`;
-      let ending = ` have been all updated to ${points} points.`;
+      let ending = ` have been all updated to ${points[index]} points.`;
 
-      this.updatePoints(message, id, points);
+      this.updatePoints(message, id, points[index]);
 
       if (awardStr[awardStrIndex].length + str.length + ending > 1024) {
         awardStr[awardStrIndex] += ending;
@@ -363,7 +347,7 @@ class PointKeeper {
       }
     });
 
-    this.sendMultipleMessages(message, awardStr);
+    return await this.sendMultipleMessages(message, awardStr);
   }
 
   getNganhMembers(message, nganh) {
@@ -820,9 +804,15 @@ class PointKeeper {
   }
 
   async sendMultipleMessages(message, strArray) {
-    for (let index = 0; index < strArray.length; index++) {
-      await message.channel.send(strArray[index]);
+    try {
+      for (let index = 0; index < strArray.length; index++) {
+        await message.channel.send(strArray[index]);
+      }
+    } catch (error) {
+      logger.log(log.ERROR, `Unable to send multiple messages ` + error);
+      return false;
     }
+    return true;
   }
 
   save() {
