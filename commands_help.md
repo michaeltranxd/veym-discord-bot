@@ -3,9 +3,9 @@
 The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! The idea is to have a point system and automate any tedious tasks.
 
 # Current Features:
- 
-  - Add/Deduct points
-  - Give a random Bible quote
+
+- Add/Deduct points
+- Give a random Bible quote
 
 # In-depth Documentation on Commands
 
@@ -19,12 +19,12 @@ The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! T
 - [`points removeall`](#points-removeall)
 - [`points update`](#points-update)
 - [`points updateall`](#points-updateall)
-- [`points-list <nganh> name`](#points-list-<nganh>-name)
-- [`points-list <nganh> points`](#points-list-<nganh>-points)
-- [`points-list overall name`](#points-list-overall-name)
-- [`points-list overall nganh name`](#points-list-overall-nganh-name)
-- [`points-list overall nganh points`](#points-list-overall-nganh-points)
-- [`points-list overall points`](#points-list-overall-points)
+- [`points list <nganh> name`](#points-list-<nganh>-name)
+- [`points list <nganh> points`](#points-list-<nganh>-points)
+- [`points list overall name`](#points-list-overall-name)
+- [`points list overall nganh name`](#points-list-overall-nganh-name)
+- [`points list overall nganh points`](#points-list-overall-nganh-points)
+- [`points list overall points`](#points-list-overall-points)
 - [`inspirationalquote`](#inspirationalquote)
 
 # Commands
@@ -137,64 +137,64 @@ The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! T
   - Multiple users: `!points updateall 10 @Chris, @Jack, @Mindy, @Pete`
     - Chris, Jack, Mindy, and Pete all have 10 points
 
-## `points-list <nganh> name`
+## `points list <nganh> name`
 
 - Description: Lists the points of the users in the server that are listed as `<nganh>` and sorts by name
-- Usage: `!points-list <nganh> name`
+- Usage: `!points list <nganh> name`
 - Arguments
   - `<nganh>` - The nganh of the user, valid inputs (AN/TN/NS/HS/HT)
 - Example:
-  - `!points-list AN name`
+  - `!points list AN name`
     - This lists all users who are listed as AN and organizes them by name (alphabetical order)
 
-## `points-list <nganh> points`
+## `points list <nganh> points`
 
 - Description: Lists the points of the users in the server that are listed as `<nganh>` and sorts by points descending
-- Usage: `!points-list <nganh> points`
+- Usage: `!points list <nganh> points`
 - Arguments
   - `<nganh>` - The nganh of the user, valid inputs (AN/TN/NS/HS/HT)
 - Example:
-  - `!points-list AN points`
+  - `!points list AN points`
     - This lists all users who are listed as AN and organizes them by points (descending order)
 
-## `points-list overall name`
+## `points list overall name`
 
 - Description: Lists the points of all users in the server sorted by name
-- Usage: `!points-list overall name`
+- Usage: `!points list overall name`
 - Arguments
   - N/A
 - Example:
-  - `!points-list overall name`
+  - `!points list overall name`
     - This lists all users in the server in alphabetical order
 
-## `points-list overall nganh name`
+## `points list overall nganh name`
 
 - Description: Lists the points of all users in the server sorted by nganh then by name
-- Usage: `!points-list overall nganh name`
+- Usage: `!points list overall nganh name`
 - Arguments
   - N/A
 - Example:
-  - `!points-list overall nganh name`
+  - `!points list overall nganh name`
     - This lists all users in the server by respective nganh (AN first, HT last) and then sorts by name (alphabetical order)
 
-## `points-list overall nganh points`
+## `points list overall nganh points`
 
 - Description: Lists the points of all users in the server sorted by nganh then by points descending
-- Usage: `!points-list overall nganh points`
+- Usage: `!points list overall nganh points`
 - Arguments
   - N/A
 - Example:
-  - `!points-list overall nganh points`
+  - `!points list overall nganh points`
     - This lists all users in the server by respective nganh (AN first, HT last) and then sorts by points (descending order)
 
-## `points-list overall points`
+## `points list overall points`
 
 - Description: Lists the points of all users in the server sorted by points (descending order)
-- Usage: `!points-list overall points`
+- Usage: `!points list overall points`
 - Arguments
   - N/A
 - Example:
-  - `!points-list overall points`
+  - `!points list overall points`
     - This lists all users in the server by points (descending order)
 
 ## `inspirationalquote`
