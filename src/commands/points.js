@@ -1,8 +1,9 @@
 const { prefix } = require("../config.json");
-const logger = require("../util/logger");
+const { nganhInputs, CommandException } = require("../util/util.js");
 
 const multi_point_commands = ["give", "remove", "update"];
 const single_point_commands = ["giveall", "removeall", "updateall"];
+const other_commands = ["list"];
 
 module.exports = {
   name: "points",
@@ -14,39 +15,124 @@ module.exports = {
     "remove <amount> @discordname, <amount> <@discordname>, ...\n" +
     "removeall <amount> <@discordname>, <@discordname>, ...\n" +
     "update <amount> @discordname, <amount> <@discordname>, ...\n" +
-    "updateall <amount> <@discordname>, <@discordname>, ...", // Include if args is true
+    "updateall <amount> <@discordname>, <@discordname>, ...\n" +
+    "list <nganh> name\n" +
+    "list <nganh> points\n" +
+    "list overall name\n" +
+    "list overall nganh name\n" +
+    "list overall nganh points\n" +
+    "list overall points", // Include if args is true
   admin_permissions: true,
   guildOnly: true, // Include if exclusive to server
   cooldown: 1,
   execute(message, args) {
-    let validCommands = multi_point_commands.concat(single_point_commands);
+    let validCommands = multi_point_commands
+      .concat(single_point_commands)
+      .concat(other_commands);
     let isValidCmd = validCommands.find((cmd) => {
-      return args[0] === cmd;
+      return args[0].toLowerCase() === cmd;
     });
 
     // Check for valid args[0]
     if (!isValidCmd) {
-      logger.logCommandError(
-        message,
-        this.name,
-        `User did not supply a valid command`
-      );
-      // prettier-ignore
-      return message.reply(
-        `Error: Make sure you are using the right command! It must be one of the following \`${validCommands.join(",")}\`. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
-      );
+      //prettier-ignore
+      let replyContent = `Error: Make sure you are using the right command! It must be one of the following \`${validCommands.join(",")}\`. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`;
+      let error = `User did not supply a valid command`;
+      throw new CommandException(message, replyContent, this.name, error);
+    }
+
+    // Check if list is the keyword
+    if (args[0] === "list") {
+      // Check if we have arguments after
+      if (args.length < 2) {
+        //prettier-ignore
+        let replyContent = `Error: Make sure you supplied which list you want to display [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
+        let error = `User did not supply [<nganh>/overall]`;
+        throw new CommandException(message, replyContent, this.name, error);
+      }
+
+      // Check if its a <nganh> or overall
+      if (
+        !nganhInputs.includes(args[1].toUpperCase()) &&
+        args[1].toLowerCase() !== "overall"
+      ) {
+        //prettier-ignore
+        let replyContent = `Error: I was expecting a valid argument [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
+        let error = `User did not supply a valid <nganh>/overall`;
+        throw new CommandException(message, replyContent, this.name, error);
+      }
+
+      if (nganhInputs.includes(args[1].toUpperCase())) {
+        // Check if its name and points
+        if (args[2] === "name") {
+          return message.client.pointKeepers
+            .get(message.guild.id)
+            .listOfANganhByName(message, args[1]);
+        } else if (args[2] === "points") {
+          return message.client.pointKeepers
+            .get(message.guild.id)
+            .listOfANganhByPoints(message, args[1]);
+        } else {
+          //prettier-ignore
+          let replyContent = `Error: Make sure you have supplied a valid sort for nganh ${args[1].toUpperCase()} [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
+          let error = `User did not supply which sort [name/points] to do on nganh ${args[1].toUpperCase()}`;
+          throw new CommandException(message, replyContent, this.name, error);
+        }
+      } // end of nganhInputs check
+      else if (args[1] === "overall") {
+        // Check if its name and points
+        if (args[2] === "name") {
+          return message.client.pointKeepers
+            .get(message.guild.id)
+            .listOverallByName(message);
+        } else if (args[2] === "points") {
+          return message.client.pointKeepers
+            .get(message.guild.id)
+            .listOverallByPoints(message);
+        } else if (args[2] === "nganh") {
+          if (args.length < 4) {
+            //prettier-ignore
+            let replyContent = `Error: Make sure you have supplied how you want to sort each nganh [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+            let error = `User did not supply which sort[name/points] to do on overall nganh`;
+            throw new CommandException(message, replyContent, this.name, error);
+          }
+
+          if (args[3] === "name") {
+            return message.client.pointKeepers
+              .get(message.guild.id)
+              .listOverallByNganhThenName(message);
+          } else if (args[3] === "points") {
+            return message.client.pointKeepers
+              .get(message.guild.id)
+              .listOverallByNganhThenPoints(message);
+          } else {
+            //prettier-ignore
+            let replyContent = `Error: Make sure you have supplied how you want to sort each nganh [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+            let error = `User did not supply a valid sort[name/points] to do on overall nganh`;
+            throw new CommandException(message, replyContent, this.name, error);
+          }
+        } // end of args[2] === 'nganh'
+        else {
+          // Don't recognize...
+          //prettier-ignore
+          let replyContent = `Error: Make sure you have supplied how you want to sort overall [name/points/nganh]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
+          let error = `User did not supply a how to sort overall [name/points/nganh]`;
+          throw new CommandException(message, replyContent, this.name, error);
+        }
+      } else {
+        //prettier-ignore
+        let replyContent = `Error: Make sure you have supplied which leaderboard [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
+        let error = `User did not supply which leaderboard [<nganh>/overall] to display`;
+        throw new CommandException(message, replyContent, this.name, error);
+      }
     }
 
     // Check if supplied an amount and user
     if (args.length < 3) {
-      logger.logCommandError(
-        message,
-        this.name,
-        `User did not supply an amount and user, args.length < 2`
-      );
-      return message.reply(
-        `Error: Make sure you have supplied an amount and user! Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
-      );
+      //prettier-ignore
+      let replyContent = `Error: Make sure you have supplied an amount and user! Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
+      let error = `User did not supply an amount and user, args.length < 2`;
+      throw new CommandException(message, replyContent, this.name, error);
     }
 
     // command with users and points delimited by comma so every user has its own point gain/loss/update
@@ -61,21 +147,17 @@ module.exports = {
     // (give, remove, update)
     if (isMultiPointCmd) {
       // Get pairs of users in format of (amount @<name>) delimited by commas
-      let pointPairs = args.slice(1).join("").split(",");
+      let pointPairs = args.slice(1).join(" ").split(",");
+      console.log(pointPairs);
       handlePoints(args[0], message, pointPairs);
     } // End of multi_point_commands if statement
     else if (isSinglePointCmd) {
       // Check if its a valid point amount
       if (!isValidPointAmount(args[1])) {
-        logger.logCommandError(
-          message,
-          module.exports.name,
-          `${element}" does not seem to have a valid number`
-        );
-        message.reply(
-          `Error: "${element}" - seems to not have a valid number. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-        );
-        return;
+        //prettier-ignore
+        let replyContent = `Error: "${element}" - seems to not have a valid number for points. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+        let error = `${element}" does not seem to have a valid number for points`;
+        throw new CommandException(message, replyContent, this.name, error);
       }
 
       let amount = getPointAmountFromString(args[1]);
@@ -87,22 +169,22 @@ module.exports = {
         return `${amount} ${element}`;
       });
 
-      handlePoints(args[0], message, pointPairs);
+      try {
+        handlePoints(args[0], message, pointPairs);
+      } catch (error) {
+        throw error;
+      }
     } // End of single_point_commands if statement
     else {
-      logger.logCommandError(
-        message,
-        this.name,
-        `This should never happen, points.js`
-      );
-      return message.reply(
-        `Error: Make sure you input the right command. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
-      );
+      //prettier-ignore
+      let replyContent = `Error: Make sure you input the right command. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`;
+      let error = `This should never happen, points.js`;
+      throw new CommandException(message, replyContent, this.name, error);
     }
   },
 };
 
-async function handlePoints(cmdName, message, pointPairs) {
+function handlePoints(cmdName, message, pointPairs) {
   // Ids provided by user
   let gMemberIds = [];
   // Points provided by user
@@ -112,40 +194,41 @@ async function handlePoints(cmdName, message, pointPairs) {
     let splitArray = pair.trim().split(" ");
 
     if (splitArray.length !== 2) {
-      logger.logCommandError(
+      //prettier-ignore
+      let replyContent = `Error: "${pair}" - seems to not have the right format. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`;
+      let error = `"${pair}" does not have the right format`;
+      throw new CommandException(
         message,
+        replyContent,
         module.exports.name,
-        `"${pair}" does not have the right format`
-      );
-      return message.reply(
-        `Error: "${pair}" - seems to not have the right format. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+        error
       );
     }
 
     // Check if its a valid point amount
     if (!isValidPointAmount(splitArray[0])) {
-      logger.logCommandError(
+      //prettier-ignore
+      let replyContent = `Error: "${pair}" - seems to not have a valid number for points. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      let error = `${pair}" does not seem to have a valid number for points`;
+      throw new CommandException(
         message,
+        replyContent,
         module.exports.name,
-        `${pair}" does not seem to have a valid number`
+        error
       );
-      message.reply(
-        `Error: "${pair}" - seems to not have a valid number. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      );
-      return;
     }
 
     // Validity of @discordname; check if right format of @<name>
     if (!isValidAtNameFormat(splitArray[1])) {
-      logger.logCommandError(
+      //prettier-ignore
+      let replyContent = `Error: "${pair}" - seems to be in a wrong @<name> format or member does not exist in the server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      let error = `${pair}" does not have a valid @<name> format`;
+      throw new CommandException(
         message,
+        replyContent,
         module.exports.name,
-        `${pair}" does not have a valid @<name> format`
+        error
       );
-      message.reply(
-        `Error: "${pair}" - seems to not have a valid @<name> format! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      );
-      return;
     }
 
     let amount = getPointAmountFromString(splitArray[0]);
@@ -153,15 +236,15 @@ async function handlePoints(cmdName, message, pointPairs) {
 
     // Validity of @discordname, check if valid gMember of guild
     if (!isValidMemberId(message.guild, memberId)) {
-      logger.logCommandError(
+      //prettier-ignore
+      let replyContent = `Error: "${pair}" - member does not exist in the server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
+      let error = `${pair}" does not have a valid @<name> that is in the server`;
+      throw new CommandException(
         message,
+        replyContent,
         module.exports.name,
-        `${pair}" does not have a valid @<name> that is in the server`
+        error
       );
-      message.reply(
-        `Error: "${pair}" - seems to not exist in the current server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      );
-      return;
     }
 
     // Add memberId
@@ -171,54 +254,54 @@ async function handlePoints(cmdName, message, pointPairs) {
   }
 
   if (gMemberIds.length != pointPairs.length) {
-    logger.logCommandError(
+    //prettier-ignore
+    let replyContent = `Error: Please double check your members that you have tagged`
+    let error = `gMemberIds.length != newArgs.length!, missing memberid?`;
+    throw new CommandException(
       message,
+      replyContent,
       module.exports.name,
-      `gMemberIds.length != newArgs.length!, missing memberid?`
-    );
-    return message.reply(
-      `Error: Please double check your members that you have tagged`
+      error
     );
   }
 
-  let cmdSuccess;
   if (cmdName === "give") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .givePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "remove") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .removePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "update") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .updatePointsMany(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "giveall") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .givePointsAll(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "removeall") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .removePointsAll(message, gMemberIds, gMemberPoints);
   } else if (cmdName === "updateall") {
-    cmdSuccess = await message.client.pointKeepers
+    message.client.pointKeepers
       .get(message.guild.id)
       .updatePointsAll(message, gMemberIds, gMemberPoints);
   }
 
-  if (!cmdSuccess) {
-    // ERROR
-    logger.logCommandError(
-      message,
-      cmdName,
-      `Error in running command [points ${cmdName}]`
-    );
-    return;
-  }
+  // if (!cmdSuccess) {
+  //   // ERROR
+  //   return replyCommandError(
+  //     message,
+  //     `Error: I had trouble executing your command. Please notify developer for additional help.`,
+  //     module.exports.name,
+  //     `Error in running command [points ${cmdName}]`
+  //   );
+  // }
 
-  logger.logCommandSuccess(message, `points ${cmdName}`);
+  // onCommandSuccess(message, `points ${cmdName}`);
 }
 
 function getMemberIdFromAtName(memAtName) {

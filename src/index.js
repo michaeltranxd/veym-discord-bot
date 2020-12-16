@@ -214,8 +214,14 @@ client.on("message", (message) => {
     logger.logCommand(message, command.name);
     command.execute(message, args);
   } catch (error) {
-    logger.log(logger.ERROR, `Error executing command ` + error);
-    message.reply("there was an error trying to execute that command!");
+    if (error.name) {
+      logger.logCommandError(message, error.name, error.errorLog);
+      message.reply(error.replyContent);
+    } else {
+      // Other default errors
+      logger.log(logger.ERROR, `Error executing command ` + error);
+      message.reply("there was an error trying to execute that command!");
+    }
   }
 });
 

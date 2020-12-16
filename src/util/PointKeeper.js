@@ -187,7 +187,7 @@ class PointKeeper {
     return `<@${memberID}> has been awarded ${memberPoints} points! They now have ${mem.points} points! Congratulations!! 🥳`;
   }
 
-  async givePointsMany(message, memberIDs, memberPoints) {
+  givePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -201,10 +201,10 @@ class PointKeeper {
       }
     }
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
-  async givePointsAll(message, memberIds, points) {
+  givePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
@@ -229,7 +229,7 @@ class PointKeeper {
       }
     });
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
   removePoints(message, memberID, memberPoints) {
@@ -245,7 +245,7 @@ class PointKeeper {
     return `<@${memberID}> has been deducted ${memberPoints} points! They now have ${mem.points} points! 😢`;
   }
 
-  async removePointsMany(message, memberIDs, memberPoints) {
+  removePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -260,10 +260,10 @@ class PointKeeper {
       }
     }
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
-  async removePointsAll(message, memberIds, points) {
+  removePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
@@ -288,7 +288,7 @@ class PointKeeper {
       }
     });
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
   updatePoints(message, memberID, memberPoints) {
@@ -304,7 +304,7 @@ class PointKeeper {
     return `<@${memberID}> has been updated ${memberPoints} points! They now have ${mem.points} points!`;
   }
 
-  async updatePointsMany(message, memberIDs, memberPoints) {
+  updatePointsMany(message, memberIDs, memberPoints) {
     let awardStr = [""];
     let awardStrIndex = 0;
     for (let index = 0; index < memberIDs.length; index++) {
@@ -319,10 +319,10 @@ class PointKeeper {
       }
     }
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
-  async updatePointsAll(message, memberIds, points) {
+  updatePointsAll(message, memberIds, points) {
     let awardStr = ["Members: "];
     let awardStrIndex = 0;
     // Grab the memberName from id
@@ -347,7 +347,7 @@ class PointKeeper {
       }
     });
 
-    return await this.sendMultipleMessages(message, awardStr);
+    return this.sendMultipleMessages(message, awardStr);
   }
 
   getNganhMembers(message, nganh) {
@@ -611,8 +611,14 @@ class PointKeeper {
         );
 
       // Send messsage and wait until it is sent before generating another one
-      await message.channel.send(embeddedMessage);
+      try {
+        await message.channel.send(embeddedMessage);
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
     }
+    return true;
   }
 
   async listLeaderboard(message, members) {
@@ -713,7 +719,8 @@ class PointKeeper {
     nganhLists.push(hsList);
     nganhLists.push(htList);
 
-    console.log(nganhLists);
+    // TODO LOGGER!!!
+    //console.log(nganhLists);
 
     members.forEach((elem) => {
       // Print-friendly vars
@@ -799,8 +806,14 @@ class PointKeeper {
         );
 
       // Send messsage and wait until it is sent before generating another one
-      await message.channel.send(embeddedMessage);
+      try {
+        await message.channel.send(embeddedMessage);
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
     }
+    return true;
   }
 
   async sendMultipleMessages(message, strArray) {
