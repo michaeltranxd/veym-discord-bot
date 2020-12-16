@@ -1,6 +1,7 @@
 const { prefix } = require("../config.json");
 const Discord = require("discord.js");
 const logger = require("../util/logger");
+const { CommandException } = require("../util/util.js");
 
 module.exports = {
   name: "setup",
@@ -19,11 +20,10 @@ module.exports = {
 
       if (message.guild.roles.cache.keyArray().length === 1) {
         // No roles
-        logger.log(
-          logger.WARNING,
-          `There are no roles in the guild ${message.guild.name} besides @everyone`
-        );
-        return message.reply("Please create a role for the admins");
+        //prettier-ignore
+        let replyContent = "Please create a role for the admins";
+        let errorLog = `There are no roles in the guild ${message.guild.name} besides @everyone`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
       }
 
       // generate string for adminRoles if exist
@@ -42,12 +42,18 @@ module.exports = {
           });
       }
 
+      let limitRolesReached = false;
+
       // generate string for guildRoles
       message.guild.roles.cache
         .filter((role) => {
           return role.name !== "@everyone";
         })
         .each((role) => {
+          if (guildRoles.length + `${role.name}\n`.length > 1024) {
+            limitRolesReached = true;
+            return;
+          }
           guildRoles += `${role.name}\n`;
         });
 
@@ -61,15 +67,25 @@ module.exports = {
           },
           { name: "All Roles", value: guildRoles, inline: true },
           { name: "Current Admin Roles", value: adminRoles, inline: true }
-        );
+        )
+        .setFooter("*Not all roles may be listed*");
 
       // TODO FUTURE FEATURE: Emojis as selections
 
-      return message.channel.send(embeddedMessage).then(() => {
-        message.channel.send(
-          `Please type \`${prefix}${this.name} @role1 @role2 ...\` to set admin roles\nex: \`${prefix}${this.name} @HT_Squad @HLV_Squad ...\``
-        );
-      });
+      try {
+        return message.channel.send(embeddedMessage).then(() => {
+          message.channel.send(
+            `Please type \`${prefix}${this.name} @role1 @role2 ...\` to set admin roles\nex: \`${prefix}${this.name} @HT_Squad @HLV_Squad ...\``
+          );
+        });
+      } catch (error) {
+        //prettier-ignore
+        let replyContent = `I ran into an issue. Please contact a developer.`;
+        let errorLog =
+          `Issue sending embeddedMessage, then sending message to channel` +
+          error;
+        throw new CommandException(message, replyContent, this.name, errorLog);
+      }
     }
 
     let validRoles = true;
@@ -91,10 +107,12 @@ module.exports = {
       return roleMatch[0];
     });
 
-    if (!validRoles)
-      return message.channel.send(
-        `Please make sure all roles are valid and are in correct format (@<role>)`
-      );
+    if (!validRoles) {
+      //prettier-ignore
+      let replyContent = `Please make sure all roles are valid and are in correct format (@<role>)`
+      let errorLog = `Roles provided in args are not in correct format`;
+      throw new CommandException(message, replyContent, this.name, errorLog);
+    }
 
     // Add roles to admin
     message.client.guildMetadatas.get(
@@ -109,7 +127,6 @@ module.exports = {
         `I have successfully configured to allow the following roles to have admin privileges: ${admin_string}\nPlease use \`${prefix}help\` command to learn more about my commands`
       )
       .then((msg) => {
-        logger.logCommandSuccess(message, module.exports.name);
         logger.log(
           logger.NORMAL,
           `GuildMember: [${message.author.tag}] has succesfully configured for [${message.guild.name}] with roles: ${admin_string}`
