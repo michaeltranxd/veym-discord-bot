@@ -1,5 +1,13 @@
 const { prefix } = require("../config.json");
-const { nganhInputs, CommandException } = require("../util/util.js");
+const {
+  CommandException,
+  getMemberIdFromAtName,
+  getPointAmountFromString,
+  isValidAtNameFormat,
+  isValidMemberId,
+  isValidPointAmount,
+  isValidNganh,
+} = require("../util/util.js");
 
 const multi_point_commands = ["give", "remove", "update"];
 const single_point_commands = ["giveall", "removeall", "updateall"];
@@ -37,8 +45,8 @@ module.exports = {
     if (!isValidCmd) {
       //prettier-ignore
       let replyContent = `Error: Make sure you are using the right command! It must be one of the following \`${validCommands.join(",")}\`. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`;
-      let error = `User did not supply a valid command`;
-      throw new CommandException(message, replyContent, this.name, error);
+      let errorLog = `User did not supply a valid command`;
+      throw new CommandException(message, replyContent, this.name, errorLog);
     }
 
     // Check if list is the keyword
@@ -47,22 +55,19 @@ module.exports = {
       if (args.length < 2) {
         //prettier-ignore
         let replyContent = `Error: Make sure you supplied which list you want to display [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
-        let error = `User did not supply [<nganh>/overall]`;
-        throw new CommandException(message, replyContent, this.name, error);
+        let errorLog = `User did not supply [<nganh>/overall]`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
       }
 
       // Check if its a <nganh> or overall
-      if (
-        !nganhInputs.includes(args[1].toUpperCase()) &&
-        args[1].toLowerCase() !== "overall"
-      ) {
+      if (!isValidNganh(args[1]) && args[1].toLowerCase() !== "overall") {
         //prettier-ignore
         let replyContent = `Error: I was expecting a valid argument [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
-        let error = `User did not supply a valid <nganh>/overall`;
-        throw new CommandException(message, replyContent, this.name, error);
+        let errorLog = `User did not supply a valid <nganh>/overall`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
       }
 
-      if (nganhInputs.includes(args[1].toUpperCase())) {
+      if (isValidNganh(args[1])) {
         // Check if its name and points
         if (args[2] === "name") {
           return message.client.pointKeepers
@@ -75,10 +80,15 @@ module.exports = {
         } else {
           //prettier-ignore
           let replyContent = `Error: Make sure you have supplied a valid sort for nganh ${args[1].toUpperCase()} [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
-          let error = `User did not supply which sort [name/points] to do on nganh ${args[1].toUpperCase()}`;
-          throw new CommandException(message, replyContent, this.name, error);
+          let errorLog = `User did not supply which sort [name/points] to do on nganh ${args[1].toUpperCase()}`;
+          throw new CommandException(
+            message,
+            replyContent,
+            this.name,
+            errorLog
+          );
         }
-      } // end of nganhInputs check
+      } // end of valid nganh check
       else if (args[1] === "overall") {
         // Check if its name and points
         if (args[2] === "name") {
@@ -93,8 +103,13 @@ module.exports = {
           if (args.length < 4) {
             //prettier-ignore
             let replyContent = `Error: Make sure you have supplied how you want to sort each nganh [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-            let error = `User did not supply which sort[name/points] to do on overall nganh`;
-            throw new CommandException(message, replyContent, this.name, error);
+            let errorLog = `User did not supply which sort[name/points] to do on overall nganh`;
+            throw new CommandException(
+              message,
+              replyContent,
+              this.name,
+              errorLog
+            );
           }
 
           if (args[3] === "name") {
@@ -108,22 +123,32 @@ module.exports = {
           } else {
             //prettier-ignore
             let replyContent = `Error: Make sure you have supplied how you want to sort each nganh [name/points]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-            let error = `User did not supply a valid sort[name/points] to do on overall nganh`;
-            throw new CommandException(message, replyContent, this.name, error);
+            let errorLog = `User did not supply a valid sort[name/points] to do on overall nganh`;
+            throw new CommandException(
+              message,
+              replyContent,
+              this.name,
+              errorLog
+            );
           }
         } // end of args[2] === 'nganh'
         else {
           // Don't recognize...
           //prettier-ignore
           let replyContent = `Error: Make sure you have supplied how you want to sort overall [name/points/nganh]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
-          let error = `User did not supply a how to sort overall [name/points/nganh]`;
-          throw new CommandException(message, replyContent, this.name, error);
+          let errorLog = `User did not supply a how to sort overall [name/points/nganh]`;
+          throw new CommandException(
+            message,
+            replyContent,
+            this.name,
+            errorLog
+          );
         }
       } else {
         //prettier-ignore
         let replyContent = `Error: Make sure you have supplied which leaderboard [<nganh>/overall]! Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-        let error = `User did not supply which leaderboard [<nganh>/overall] to display`;
-        throw new CommandException(message, replyContent, this.name, error);
+        let errorLog = `User did not supply which leaderboard [<nganh>/overall] to display`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
       }
     }
 
@@ -131,8 +156,8 @@ module.exports = {
     if (args.length < 3) {
       //prettier-ignore
       let replyContent = `Error: Make sure you have supplied an amount and user! Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`
-      let error = `User did not supply an amount and user, args.length < 2`;
-      throw new CommandException(message, replyContent, this.name, error);
+      let errorLog = `User did not supply an amount and user, args.length < 2`;
+      throw new CommandException(message, replyContent, this.name, errorLog);
     }
 
     // command with users and points delimited by comma so every user has its own point gain/loss/update
@@ -148,7 +173,6 @@ module.exports = {
     if (isMultiPointCmd) {
       // Get pairs of users in format of (amount @<name>) delimited by commas
       let pointPairs = args.slice(1).join(" ").split(",");
-      console.log(pointPairs);
       handlePoints(args[0], message, pointPairs);
     } // End of multi_point_commands if statement
     else if (isSinglePointCmd) {
@@ -156,8 +180,8 @@ module.exports = {
       if (!isValidPointAmount(args[1])) {
         //prettier-ignore
         let replyContent = `Error: "${element}" - seems to not have a valid number for points. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-        let error = `${element}" does not seem to have a valid number for points`;
-        throw new CommandException(message, replyContent, this.name, error);
+        let errorLog = `${element}" does not seem to have a valid number for points`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
       }
 
       let amount = getPointAmountFromString(args[1]);
@@ -178,8 +202,8 @@ module.exports = {
     else {
       //prettier-ignore
       let replyContent = `Error: Make sure you input the right command. Please consult the usage by typing \`${prefix}help ${this.name}\` to get more info`;
-      let error = `This should never happen, points.js`;
-      throw new CommandException(message, replyContent, this.name, error);
+      let errorLog = `This should never happen, points.js`;
+      throw new CommandException(message, replyContent, this.name, errorLog);
     }
   },
 };
@@ -196,12 +220,12 @@ function handlePoints(cmdName, message, pointPairs) {
     if (splitArray.length !== 2) {
       //prettier-ignore
       let replyContent = `Error: "${pair}" - seems to not have the right format. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`;
-      let error = `"${pair}" does not have the right format`;
+      let errorLog = `"${pair}" does not have the right format`;
       throw new CommandException(
         message,
         replyContent,
         module.exports.name,
-        error
+        errorLog
       );
     }
 
@@ -209,12 +233,12 @@ function handlePoints(cmdName, message, pointPairs) {
     if (!isValidPointAmount(splitArray[0])) {
       //prettier-ignore
       let replyContent = `Error: "${pair}" - seems to not have a valid number for points. Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      let error = `${pair}" does not seem to have a valid number for points`;
+      let errorLog = `${pair}" does not seem to have a valid number for points`;
       throw new CommandException(
         message,
         replyContent,
         module.exports.name,
-        error
+        errorLog
       );
     }
 
@@ -222,12 +246,12 @@ function handlePoints(cmdName, message, pointPairs) {
     if (!isValidAtNameFormat(splitArray[1])) {
       //prettier-ignore
       let replyContent = `Error: "${pair}" - seems to be in a wrong @<name> format or member does not exist in the server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      let error = `${pair}" does not have a valid @<name> format`;
+      let errorLog = `${pair}" does not have a valid @<name> format`;
       throw new CommandException(
         message,
         replyContent,
         module.exports.name,
-        error
+        errorLog
       );
     }
 
@@ -238,12 +262,12 @@ function handlePoints(cmdName, message, pointPairs) {
     if (!isValidMemberId(message.guild, memberId)) {
       //prettier-ignore
       let replyContent = `Error: "${pair}" - member does not exist in the server! Please consult the usage by typing \`${prefix}help ${module.exports.name}\` to get more info`
-      let error = `${pair}" does not have a valid @<name> that is in the server`;
+      let errorLog = `${pair}" does not have a valid @<name> that is in the server`;
       throw new CommandException(
         message,
         replyContent,
         module.exports.name,
-        error
+        errorLog
       );
     }
 
@@ -256,12 +280,12 @@ function handlePoints(cmdName, message, pointPairs) {
   if (gMemberIds.length != pointPairs.length) {
     //prettier-ignore
     let replyContent = `Error: Please double check your members that you have tagged`
-    let error = `gMemberIds.length != newArgs.length!, missing memberid?`;
+    let errorLog = `gMemberIds.length != newArgs.length!, missing memberid?`;
     throw new CommandException(
       message,
       replyContent,
       module.exports.name,
-      error
+      errorLog
     );
   }
 
@@ -290,42 +314,4 @@ function handlePoints(cmdName, message, pointPairs) {
       .get(message.guild.id)
       .updatePointsAll(message, gMemberIds, gMemberPoints);
   }
-
-  // if (!cmdSuccess) {
-  //   // ERROR
-  //   return replyCommandError(
-  //     message,
-  //     `Error: I had trouble executing your command. Please notify developer for additional help.`,
-  //     module.exports.name,
-  //     `Error in running command [points ${cmdName}]`
-  //   );
-  // }
-
-  // onCommandSuccess(message, `points ${cmdName}`);
-}
-
-function getMemberIdFromAtName(memAtName) {
-  let gMemberMatch = memAtName.match(/[0-9]+/);
-  return gMemberMatch ? gMemberMatch[0] : null;
-}
-
-function isValidAtNameFormat(atName) {
-  // Validity of @discordname; check if right format of @<name>
-  let gMemberMatch = atName.match(/[0-9]+/);
-  return gMemberMatch ? true : false;
-}
-function isValidMemberId(guild, gMemberId) {
-  let guildMembers = guild.members.cache;
-  let gMember = guildMembers.get(gMemberId);
-  //check if args[0] is a person in the server
-  return gMember ? true : false;
-}
-
-function isValidPointAmount(amount) {
-  // Grab the amount and check if its a valid number
-  return Number(isNaN(amount)) ? false : true;
-}
-
-function getPointAmountFromString(amountString) {
-  return Number(amountString);
 }
