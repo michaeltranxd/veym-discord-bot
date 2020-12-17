@@ -1,5 +1,6 @@
 const fs = require("fs");
-
+const { CommandException } = require("../util/util");
+const logger = require("./logger");
 class GuildMetadata {
   __presetup;
   __guildid;
@@ -18,13 +19,13 @@ class GuildMetadata {
 
       let json = JSON.parse(str);
 
-      //console.log(json);
       // Parse data out
       if (json.__presetup !== undefined) this.__presetup = json.__presetup;
       if (json.__roles_admin) this.__roles_admin = json.__roles_admin;
     } catch (error) {
-      console.log(
-        "Reading from file [Guildmetadata] was bad..., possibly file does not exist since new server?"
+      logger.log(
+        logger.WARNING,
+        `Possible new server so generating a GuildMetadata...`
       );
 
       fs.writeFileSync(
@@ -32,7 +33,10 @@ class GuildMetadata {
         JSON.stringify([]),
         function (err) {
           if (err) {
-            console.log(err);
+            logger.log(
+              logger.ERROR,
+              `Error in creating GuildMetadata file ` + err
+            );
           }
         }
       );
@@ -71,7 +75,7 @@ class GuildMetadata {
       json,
       function (err) {
         if (err) {
-          console.log(err);
+          logger.log(logger.ERROR, `Issue with saving GuildMetadata. ` + err);
         }
       }
     );
