@@ -1,11 +1,10 @@
 const Discord = require("discord.js");
 const fs = require("fs");
 const PointMember = require("./PointMember");
-const { nganhInputs } = require("../util/util.json");
+const { nganhInputs, CommandException } = require("../util/util");
 
 const lodash = require("lodash");
 const logger = require("./logger");
-const { time } = require("console");
 
 const medals = ["🥇", "🥈", "🥉"];
 
@@ -88,8 +87,9 @@ class PointKeeper {
         this.__members.set(member.id, pointMember);
       });
     } catch (error) {
-      console.log(
-        "Reading from file was bad..., possibly file does not exist since new server?"
+      logger.log(
+        logger.WARNING,
+        `Possible new server so generating a PointKeeper...`
       );
 
       fs.writeFileSync(
@@ -97,7 +97,10 @@ class PointKeeper {
         JSON.stringify([]),
         function (err) {
           if (err) {
-            console.log(err);
+            logger.log(
+              logger.ERROR,
+              `Error in creating PointKeeper file ` + err
+            );
           }
         }
       );
@@ -120,39 +123,13 @@ class PointKeeper {
     }
   }
 
-  // addMember(message, memberID, memberNganh, memberPoints) {
-  //   if (this.__members.get(memberID)) {
-  //     return message.reply(`Error: User already added.`);
-  //   }
-
-  //   let pointMember = new PointMember(memberID, memberNganh, memberPoints);
-
-  //   this.updateMember(memberID, mem);
-
-  //   return message.reply(`Member <@${memberID}> has been added to the list`);
-  // }
-
-  // removeMember(message, memberID) {
-  //   let pointMember = this.__members.get(memberID);
-
-  //   if (!pointMember) {
-  //     return message.reply(
-  //       `Error: That user is not added to the list previously! Could not delete.`
-  //     );
-  //   }
-
-  //   this.__members.delete(memberID);
-  //   this.save();
-
-  //   return message.reply(
-  //     `Member ${pointMember.name} (<@${pointMember.id}>) has been removed from the list`
-  //   );
-  // }
-
   updateMember(message, memberID, memberNganh) {
     let mem = this.__members.get(memberID);
     if (!mem) {
-      return message.reply(`Member <@${memberID}> was not found on the list`);
+      //prettier-ignore
+      let replyContent = `Member <@${memberID}> was not found on the list`;
+      let errorLog = `Member <@${memberID}> was not found on the list`;
+      throw new CommandException(message, replyContent, `assign`, errorLog);
     }
 
     mem.nganh = memberNganh;
@@ -178,7 +155,10 @@ class PointKeeper {
   givePoints(message, memberID, memberPoints) {
     let mem = this.__members.get(memberID);
     if (!mem) {
-      return message.reply(`Member <@${memberID}> was not found on the list`);
+      //prettier-ignore
+      let replyContent = `Member <@${memberID}> was not found on the list`;
+      let errorLog = `Member <@${memberID}> was not found on the list`;
+      throw new CommandException(message, replyContent, `points`, errorLog);
     }
 
     mem.points = mem.points + memberPoints;
@@ -235,7 +215,10 @@ class PointKeeper {
   removePoints(message, memberID, memberPoints) {
     let mem = this.__members.get(memberID);
     if (!mem) {
-      return message.reply(`Member <@${memberID}> was not found on the list`);
+      //prettier-ignore
+      let replyContent = `Member <@${memberID}> was not found on the list`;
+      let errorLog = `Member <@${memberID}> was not found on the list`;
+      throw new CommandException(message, replyContent, `points`, errorLog);
     }
 
     mem.points = Math.max(0, mem.points - memberPoints);
@@ -294,7 +277,10 @@ class PointKeeper {
   updatePoints(message, memberID, memberPoints) {
     let mem = this.__members.get(memberID);
     if (!mem) {
-      return message.reply(`Member <@${memberID}> was not found on the list`);
+      //prettier-ignore
+      let replyContent = `Member <@${memberID}> was not found on the list`;
+      let errorLog = `Member <@${memberID}> was not found on the list`;
+      throw new CommandException(message, replyContent, `points`, errorLog);
     }
 
     mem.points = memberPoints;
@@ -353,8 +339,15 @@ class PointKeeper {
   getNganhMembers(message, nganh) {
     // Check if empty
     if (this.__members.keyArray().length === 0) {
-      message.reply(`List is empty. Please add someone`);
-      return;
+      //prettier-ignore
+      let replyContent = `List is empty. Please add someone`;
+      let errorLog = `this.__members list is empty`;
+      throw new CommandException(
+        message,
+        replyContent,
+        `points list`,
+        errorLog
+      );
     }
 
     // Grab the users in the nganh
@@ -365,10 +358,15 @@ class PointKeeper {
       });
 
     if (filteredMembers.keyArray().length === 0) {
-      message.reply(
-        `There were no people listed as nganh ${nganh}. Please configure using the update command`
+      //prettier-ignore
+      let replyContent = `There were no people listed as nganh ${nganh}. Please configure using the update command`;
+      let errorLog = `There were no people listed as nganh ${nganh}`;
+      throw new CommandException(
+        message,
+        replyContent,
+        `points list`,
+        errorLog
       );
-      return;
     }
 
     return filteredMembers;
@@ -377,8 +375,14 @@ class PointKeeper {
   getOverallMembers(message) {
     // Check if empty
     if (this.__members.keyArray().length === 0) {
-      message.reply(`List is empty. Please add someone`);
-      return;
+      let replyContent = `List is empty. Please add someone`;
+      let errorLog = `this.__members list is empty`;
+      throw new CommandException(
+        message,
+        replyContent,
+        `points list`,
+        errorLog
+      );
     }
 
     return lodash.cloneDeep(this.__members);
@@ -614,11 +618,17 @@ class PointKeeper {
       try {
         await message.channel.send(embeddedMessage);
       } catch (error) {
-        console.log(error);
-        return false;
+        //prettier-ignore
+        let replyContent = `Error: Trouble sending messages to this channel. Contact a developer about this.`;
+        let errorLog = `Issue with sending embeddedMessage.` + error;
+        throw new CommandException(
+          message,
+          replyContent,
+          `PointKeeper.listMembers()`,
+          errorLog
+        );
       }
     }
-    return true;
   }
 
   async listLeaderboard(message, members) {
@@ -719,9 +729,6 @@ class PointKeeper {
     nganhLists.push(hsList);
     nganhLists.push(htList);
 
-    // TODO LOGGER!!!
-    //console.log(nganhLists);
-
     members.forEach((elem) => {
       // Print-friendly vars
       let memName = `<@${elem.id}>\n`;
@@ -735,7 +742,6 @@ class PointKeeper {
 
       if (nganhIndex !== 5 && nganhIndex !== -1) {
         // Found nganh so lets check if user has same points
-        let place = 1; // 1st, 2nd, 3rd
         nganhLists[nganhIndex].forEach((point, i) => {
           if (point === elem.points) {
             // Matched points
@@ -809,11 +815,17 @@ class PointKeeper {
       try {
         await message.channel.send(embeddedMessage);
       } catch (error) {
-        console.log(error);
-        return false;
+        //prettier-ignore
+        let replyContent = `Error: Trouble sending messages to this channel. Contact a developer about this.`;
+        let errorLog = `Issue with sending messages. ` + error;
+        throw new CommandException(
+          message,
+          replyContent,
+          `PointKeeper.listLeaderboard()`,
+          errorLog
+        );
       }
     }
-    return true;
   }
 
   async sendMultipleMessages(message, strArray) {
@@ -822,10 +834,16 @@ class PointKeeper {
         await message.channel.send(strArray[index]);
       }
     } catch (error) {
-      logger.log(log.ERROR, `Unable to send multiple messages ` + error);
-      return false;
+      //prettier-ignore
+      let replyContent = `Error: Trouble sending messages to this channel. Contact a developer about this.`;
+      let errorLog = `Unable to send multiple messages. ` + error;
+      throw new CommandException(
+        message,
+        replyContent,
+        `PointKeeper.sendMultipleMessages()`,
+        errorLog
+      );
     }
-    return true;
   }
 
   save() {
@@ -836,14 +854,13 @@ class PointKeeper {
     });
 
     json = JSON.stringify(json);
-    //console.log(json);
 
     fs.writeFileSync(
       `./util/guildpoints/${this.__guildid}.json`,
       json,
       function (err) {
         if (err) {
-          console.log(err);
+          logger.log(logger.ERROR, `Issue with saving PointKeeper. ` + err);
         }
       }
     );
