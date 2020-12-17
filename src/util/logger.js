@@ -56,17 +56,32 @@ class Logger {
   }
 
   logCommand(message, commandName) {
-    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Handling '${commandName}' command in guild [${message.guild.name}]`;
+    let msgContent = `MsgContent:"${message.content}"`;
+    let user = `User:${message.author.tag}`;
+    let command = `Handling '${commandName}' command`;
+    let location = `in `;
+    message.guild ? (location += `${message.guild.name}`) : (location += `DM`);
+    let logMessage = `${msgContent} | ${user} | ${command} ${location}`;
     this.log(this.NORMAL, logMessage);
   }
 
   logCommandSuccess(message, commandName) {
-    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Successfully executed '${commandName}' command in guild [${message.guild.name}]`;
+    let msgContent = `MsgContent:"${message.content}"`;
+    let user = `User:${message.author.tag}`;
+    let command = `Successfully executed '${commandName}' command`;
+    let location = `in `;
+    message.guild ? (location += `${message.guild.name}`) : (location += `DM`);
+    let logMessage = `${msgContent} | ${user} | ${command} ${location}`;
     this.log(this.SUCCESS, logMessage);
   }
 
   logCommandError(message, commandName, error) {
-    let logMessage = `MsgContent:"${message.content}" | User:${message.author.tag} | Ran [${message.content}] using command '${commandName}', but failed due to error: [${error}]`;
+    let msgContent = `MsgContent:"${message.content}"`;
+    let user = `User:${message.author.tag}`;
+    let command = `Ran [${message.content}] using command '${commandName}', but failed due to error: [${error}]`;
+    let location = `in `;
+    message.guild ? (location += `${message.guild.name}`) : (location += `DM`);
+    let logMessage = `${msgContent} | ${user} | ${command} ${location}`;
     this.log(this.ERROR, logMessage);
   }
 

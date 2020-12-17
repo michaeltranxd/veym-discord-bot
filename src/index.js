@@ -87,7 +87,7 @@ client.once("ready", () => {
  *
  */
 
-client.on("message", (message) => {
+client.on("message", async (message) => {
   let isDev = permissions.isDev(message);
 
   // Ignore the message if it was sent by the bot or if it doesn't have our prefix
@@ -212,9 +212,10 @@ client.on("message", (message) => {
 
   try {
     logger.logCommand(message, command.name);
-    command.execute(message, args);
+    await command.execute(message, args);
+    logger.logCommandSuccess(message, command.name);
   } catch (error) {
-    if (error.name) {
+    if (error && error.type == `CommandException`) {
       logger.logCommandError(message, error.name, error.errorLog);
       message.reply(error.replyContent);
     } else {

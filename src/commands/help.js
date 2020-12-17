@@ -1,5 +1,5 @@
 const { prefix } = require("../config.json");
-const logger = require("../util/logger");
+const { CommandException } = require("../util/util.js");
 const permissions = require("../util/permissions");
 
 module.exports = {
@@ -9,13 +9,17 @@ module.exports = {
   usage: "[command name]", // Include if args is true
   guildOnly: true, // Include if exclusive to server
   execute(message, args) {
-    if (args.length === 0) {
-      // !help for command list
-      return handleCommandList(message);
+    try {
+      if (args.length === 0) {
+        // !help for command list
+        handleCommandList(message);
+      } else {
+        // !help [command], for command info
+        handleCommandHelp(message, args);
+      }
+    } catch (error) {
+      throw error;
     }
-
-    // !help [command], for command info
-    return handleCommandHelp(message, args);
   },
 };
 
@@ -51,17 +55,17 @@ function handleCommandList(message) {
     `\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`
   );
 
-  return message.channel
-    .send(data, { split: true })
-    .then((msg) => {
-      logger.logCommand(message, module.exports.name);
-    })
-    .catch((error) => {
-      logger.log(logger.ERROR, `help.js ${error}`);
-      message.reply(
-        "It seems like there was an unexpected error. Please contact a developer"
-      );
-    });
+  return message.channel.send(data, { split: true }).catch((error) => {
+    //prettier-ignore
+    let replyContent = `It seems like there was an unexpected error. Please contact a developer`;
+    let errorLog = `help.js ${error}`;
+    throw new CommandException(
+      message,
+      replyContent,
+      module.exports.name,
+      errorLog
+    );
+  });
 }
 
 function handleCommandHelp(message, args) {
@@ -75,7 +79,15 @@ function handleCommandHelp(message, args) {
     commands.find((c) => c.aliases && c.aliases.includes(name));
 
   if (!command) {
-    return message.reply("that's not a valid command!");
+    //prettier-ignore
+    let replyContent = `that's not a valid command!`;
+    let errorLog = `Invalid command`;
+    throw new CommandException(
+      message,
+      replyContent,
+      module.exports.name,
+      errorLog
+    );
   }
 
   data.push(`**Name:** ${command.name}`);
@@ -96,7 +108,5 @@ function handleCommandHelp(message, args) {
 
   data.push(`**Cooldown:** ${command.cooldown || 3} second(s)`);
 
-  return message.channel.send(data, { split: true }).then((msg) => {
-    logger.logCommandSuccess(message, module.exports.name);
-  });
+  return message.channel.send(data, { split: true });
 }

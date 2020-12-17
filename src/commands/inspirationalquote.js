@@ -1,5 +1,6 @@
 const { prefix } = require("../config.json");
 const fs = require("fs");
+const { CommandException } = require(`../util/util`);
 const logger = require("../util/logger");
 const chokidar = require("chokidar"); // Solution to fs.watch (https://github.com/paulmillr/chokidar)
 
@@ -100,24 +101,25 @@ module.exports = {
   cooldown: 1,
   execute(message, args) {
     if (args.length != 0) {
-      return message.reply(
-        `Error: Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`
-      );
+      //prettier-ignore
+      let replyContent = `Error: Please consult the usage by typing\n \`${prefix}help ${this.name}\` to get more info`;
+      let errorLog = `Arguments provided, but expected none`;
+      throw new CommandException(message, replyContent, this.name, errorLog);
     }
 
     if (quotes.length == 0 && authors.length == 0) {
       let success = readFromFile();
-      if (!success)
-        return message.reply(
-          `I had trouble getting the quotes, please contact the developer about this issue`
-        );
+      if (!success) {
+        //prettier-ignore
+        let replyContent = `I had trouble getting the quotes, please contact the developer about this issue`
+        let errorLog = `Trouble running readFromFile()`;
+        throw new CommandException(message, replyContent, this.name, errorLog);
+      }
     }
 
     let randomIndex = Math.floor(Math.random() * quotes.length);
-    message
-      .reply(`${quotes[randomIndex]} - **${authors[randomIndex]}**`)
-      .then((msg) => {
-        logger.logCommandSuccess(message, module.exports.name);
-      });
+    return message.reply(
+      `${quotes[randomIndex]} - **${authors[randomIndex]}**`
+    );
   },
 };
