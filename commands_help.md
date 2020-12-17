@@ -12,7 +12,7 @@ The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! T
 ## Overview
 
 - [`setup`](#setup)
-- [`members-update`](#members-update)
+- [`assign`](#assign)
 - [`points give`](#points-give)
 - [`points giveall`](#points-giveall)
 - [`points remove`](#points-remove)
@@ -41,17 +41,21 @@ The goal of the Sinh Hoat Bot is to gamify and make Sinh Hoat online more fun! T
   - See prompt and instructions for setup: `!setup`
   - Assign admin roles: `!setup @HT_Squad @HLV_Squad ...`
 
-## `members-update`
+## `assign`
 
-- Description: Updates nganh for a particular user or multiple users, each user has its own `<nganh>`
-- Usage: `!members-update <@discordname> <nganh>, <@discordname> <nganh>, ...`
+- Description: Assigns a nganh for a particular user or multiple users
+- Usage: `!assign <nganh> <@discordname>, <nganh> <@discordname>, ...` or `!assign <nganh> <@discordname>, <@discordname>, ...`
 - Arguments
-  - `<@discordname>` - Mention the user by typing @name
   - `<nganh>` - Valid nganhs are AN/TN/NS/HS/HT
+  - `<@discordname>` - Mention the user by typing @name
   - Every user added is seperated by a comma
 - Example:
-  - Single user: `!members-update @Chris AN`
-  - Multiple users: `!members-update @Chris AN, @Jack TN, @Mindy HS, @Pete HT`
+  - Single user: `!assign AN @Chris`
+    - Chris is assigned nganh AN
+  - Multiple users: `!assign AN @Chris, TN @Jack, HS @Mindy, HT @Pete`
+    - Chris is assigned nganh AN, Jack is assigned nganh TN, Mindy is assigned nganh HS, and Pete is assigned nganh HT
+  - Multiple users one nganh: `!assign AN @Chris, @Jack, @Mindy, @Pete`
+    - Chris, Jack, Mindy, and Pete are all assigned nganh AN
 
 ## `points give`
 
